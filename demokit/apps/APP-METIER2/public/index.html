@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulation OWASP A5 - Consultant Sécurité</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #2d3748;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height:160px;
+        width: 100%;
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+      }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background-color: #4a5568;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .status-bar span {
+            margin: 5px 0;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            padding-top: 200px;
+        }
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .risk {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #cbd5e0;
+            background-color: white;
+        }
+        .risk.critique {
+            border-color: #e53e3e;
+            background-color: #fff5f5;
+        }
+        .remediation-options {
+            margin: 10px 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            background-color: #3182ce;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #2b6cb0;
+        }
+        .button:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+        .employee {
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #cbd5e0;
+            border-radius: 5px;
+            background-color: #edf2f7;
+        }
+        .delete-button {
+            background-color: #e53e3e;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            padding: 5px 10px;
+            border: none;
+        }
+        .delete-button:hover {
+            background-color: #c53030;
+        }
+        .rss-response {
+            margin-top: 10px;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 5px;
+            background-color: #edf2f7;
+        }
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .dialog-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Simulation OWASP A5 - Consultant Sécurité</h1>
+<div class="status-bar hidden">
+    <span>Budget Restant : <span id="budget">500000 €</span></span>
+    <span>Couverture Globale : <span id="global-coverage">0%</span></span>
+    <span>Critiques Couverts : <span id="critical-coverage">0% / 100%</span></span>
+</div>
+</header>
+
+<div id="dialog" class="dialog-overlay">
+    <div class="dialog-box">
+        <p><strong>RSSI :</strong> "Votre mission est de couvrir tous les risques critiques en respectant le budget de <strong>500 000 €</strong>. Vous pouvez utiliser des équipes internes, mais elles ont une capacité limitée. Recourez aux externes si nécessaire. Soumettez votre plan quand il est prêt."</p>
+        <p><strong>Vous :</strong> "Très bien, je vais analyser les risques et construire un plan d’action optimisé."</p>
+        <button onclick="startGame()">Commencer la mission</button>
+    </div>
+</div>
+
+<div class="container hidden">
+    <div class="panel">
+        <h2>Risques Identifiés</h2>
+        <div id="risks"></div>
+    </div>
+    <div class="panel">
+        <h2>Employés Internes</h2>
+        <div id="employees"></div>
+    </div>
+    <div class="panel">
+        <h2>Package de Proposition</h2>
+        <div id="package"></div>
+        <button class="button" onclick="submitToRSSI()">Soumettre au RSSI</button>
+        <div id="rss-response" class="rss-response"></div>
+    </div>
+</div>
+
+<script>
+    let budget = 500000;
+    let globalCoverage = 0;
+    let criticalCoverage = 0;
+    let criticalCount = 0;
+    let package = [];
+    const employees = [
+        { name: 'Alice', workload: 0, maxWorkload: 2 },
+        { name: 'Dominique', workload: 0, maxWorkload: 2 },
+        { name: 'Charlie', workload: 0, maxWorkload: 2 },
+        { name: 'Justin', workload: 0, maxWorkload: 2 }
+    ];
+
+const risks = [
+    {
+        name: 'Ports inutiles ouverts',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Fermer les ports inutiles', coverage: 50, costInternal: 10000, costExternal: 30000, selected: false },
+            { description: 'Configurer un firewall', coverage: 50, costInternal: 15000, costExternal: 35000, selected: false }
+        ]
+    },
+    {
+        name: 'Frameworks obsolètes',
+        severity: 'Haute',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Mettre à jour les frameworks', coverage: 60, costInternal: 25000, costExternal: 60000, selected: false },
+            { description: 'Auditer les versions installées', coverage: 40, costInternal: 20000, costExternal: 50000, selected: false }
+        ]
+    },
+    {
+        name: 'Permissions excessives',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Réviser les permissions', coverage: 50, costInternal: 15000, costExternal: 40000, selected: false },
+            { description: 'Configurer un système RBAC', coverage: 50, costInternal: 20000, costExternal: 50000, selected: false }
+        ]
+    },
+    {
+        name: 'Manque de sauvegardes chiffrées',
+        severity: 'Moyenne',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Implémenter des sauvegardes chiffrées', coverage: 60, costInternal: 22000, costExternal: 55000, selected: false },
+            { description: 'Effectuer un audit des sauvegardes', coverage: 40, costInternal: 20000, costExternal: 45000, selected: false }
+        ]
+    },
+    {
+        name: 'Données sensibles exposées',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Crypter les données sensibles', coverage: 50, costInternal: 20000, costExternal: 50000, selected: false },
+            { description: 'Restreindre l’accès aux données', coverage: 50, costInternal: 18000, costExternal: 40000, selected: false }
+        ]
+    },
+    {
+        name: 'Absence de journalisation',
+        severity: 'Moyenne',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Configurer des logs centralisés', coverage: 60, costInternal: 22000, costExternal: 55000, selected: false },
+            { description: 'Auditer les configurations existantes', coverage: 40, costInternal: 20000, costExternal: 45000, selected: false }
+        ]
+    },
+    {
+        name: 'Authentification faible',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Implémenter l’authentification MFA', coverage: 60, costInternal: 30000, costExternal: 70000, selected: false },
+            { description: 'Renforcer les politiques de mots de passe', coverage: 40, costInternal: 25000, costExternal: 60000, selected: false }
+        ]
+    },
+    {
+        name: 'Configurations par défaut',
+        severity: 'Haute',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Auditer les configurations système', coverage: 50, costInternal: 20000, costExternal: 50000, selected: false },
+            { description: 'Désactiver les paramètres par défaut', coverage: 50, costInternal: 18000, costExternal: 45000, selected: false }
+        ]
+    },
+    {
+        name: 'Manque de segmentation réseau',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Segmenter les réseaux internes', coverage: 50, costInternal: 30000, costExternal: 80000, selected: false },
+            { description: 'Mettre en place des VLAN sécurisés', coverage: 50, costInternal: 25000, costExternal: 70000, selected: false }
+        ]
+    },
+    {
+        name: 'TLS mal configuré',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Configurer les certificats TLS', coverage: 50, costInternal: 15000, costExternal: 40000, selected: false },
+            { description: 'Désactiver les protocoles obsolètes', coverage: 50, costInternal: 10000, costExternal: 35000, selected: false }
+        ]
+    },
+    {
+        name: 'Manque de détection des intrusions',
+        severity: 'Haute',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Installer un IDS/IPS', coverage: 50, costInternal: 30000, costExternal: 60000, selected: false },
+            { description: 'Configurer des alertes automatisées', coverage: 50, costInternal: 20000, costExternal: 50000, selected: false }
+        ]
+    },
+    {
+        name: 'Absence de tests de vulnérabilité',
+        severity: 'Moyenne',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Planifier des scans réguliers', coverage: 60, costInternal: 18000, costExternal: 40000, selected: false },
+            { description: 'Mettre en place un Bug Bounty', coverage: 40, costInternal: 25000, costExternal: 55000, selected: false }
+        ]
+    },
+    {
+        name: 'Services inutiles actifs',
+        severity: 'Haute',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Désactiver les services inutiles', coverage: 50, costInternal: 15000, costExternal: 35000, selected: false },
+            { description: 'Auditer les services actifs', coverage: 50, costInternal: 20000, costExternal: 45000, selected: false }
+        ]
+    },
+    {
+        name: 'Clés API exposées',
+        severity: 'Critique',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Révoquer et regénérer les clés exposées', coverage: 50, costInternal: 25000, costExternal: 60000, selected: false },
+            { description: 'Restreindre les permissions des clés', coverage: 50, costInternal: 20000, costExternal: 50000, selected: false }
+        ]
+    },
+    {
+        name: 'Logs non sécurisés',
+        severity: 'Moyenne',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Chiffrer les fichiers journaux', coverage: 60, costInternal: 22000, costExternal: 55000, selected: false },
+            { description: 'Configurer des permissions sur les logs', coverage: 40, costInternal: 20000, costExternal: 45000, selected: false }
+        ]
+    },
+    {
+        name: 'Absence de plan de reprise après sinistre',
+        severity: 'Haute',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Développer un plan de reprise', coverage: 50, costInternal: 30000, costExternal: 80000, selected: false },
+            { description: 'Tester régulièrement le plan', coverage: 50, costInternal: 25000, costExternal: 70000, selected: false }
+        ]
+    },
+    {
+        name: 'Manque de surveillance des API',
+        severity: 'Haute',
+        totalCoverage: 0,
+        isPatched: false,
+        remediations: [
+            { description: 'Mettre en place un monitoring API', coverage: 50, costInternal: 20000, costExternal: 50000, selected: false },
+            { description: 'Auditer les appels API', coverage: 50, costInternal: 18000, costExternal: 45000, selected: false }
+        ]
+    }
+];
+
+
+    function startGame() {
+        document.getElementById('dialog').style.display = 'none';
+        document.querySelector('.status-bar').classList.remove('hidden');
+        document.querySelector('.container').classList.remove('hidden');
+
+        criticalCount = risks.filter(risk => risk.severity === 'Critique').length;
+        loadRisks();
+        loadEmployees();
+    }
+
+    function loadEmployees() {
+        const employeesDiv = document.getElementById('employees');
+        employeesDiv.innerHTML = employees.map(employee => `
+            <div class="employee">
+                <strong>${employee.name}</strong><br>
+                Charge : ${employee.workload} / ${employee.maxWorkload} tâches
+            </div>
+        `).join('');
+    }
+
+    function addRemediation(riskIndex, remediationIndex, type) {
+        const risk = risks[riskIndex];
+        const remediation = risk.remediations[remediationIndex];
+        const cost = type === 'internal' ? remediation.costInternal : remediation.costExternal;
+
+        if (type === 'internal') {
+            const availableEmployee = employees.find(e => e.workload < e.maxWorkload);
+            if (!availableEmployee) {
+                alert('Tous les employés internes sont occupés.');
+                return;
+            }
+            availableEmployee.workload++;
+        }
+
+        if (budget >= cost && !remediation.selected) {
+            budget -= cost;
+            remediation.selected = true;
+            risk.totalCoverage += remediation.coverage;
+
+            if (risk.totalCoverage >= 100) {
+                risk.isPatched = true;
+                if (risk.severity === 'Critique') criticalCoverage++;
+                globalCoverage += 100 / risks.length;
+            }
+
+            package.push({ riskName: risk.name, remediation: remediation.description, cost, type });
+            updateUI();
+        } else {
+            alert('Budget insuffisant ou remédiation déjà sélectionnée.');
+        }
+    }
+
+    function submitToRSSI() {
+        const responseDiv = document.getElementById('rss-response');
+        const allCriticalCovered = risks
+            .filter(risk => risk.severity === 'Critique')
+            .every(risk => risk.isPatched);
+
+        if (globalCoverage > 100) {
+            responseDiv.innerHTML = "RSSI : 'Vous dépassez les besoins. Réduisez la couverture.'";
+        } else if (allCriticalCovered) {
+            responseDiv.innerHTML = "RSSI : 'Excellent travail, tous les risques critiques sont couverts.'";
+        } else {
+            responseDiv.innerHTML = "RSSI : 'Les risques critiques ne sont pas totalement couverts. Veuillez continuer.'";
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('budget').textContent = `${budget} €`;
+        document.getElementById('global-coverage').textContent = `${globalCoverage.toFixed(2)}%`;
+        document.getElementById('critical-coverage').textContent = `${(criticalCoverage / criticalCount * 100).toFixed(2)}% / 100%`;
+        loadRisks();
+        loadEmployees();
+    }
+
+    function loadRisks() {
+        const risksDiv = document.getElementById('risks');
+        risksDiv.innerHTML = risks.map((risk, index) => `
+            <div class="risk ${risk.severity.toLowerCase()}">
+                <strong>${risk.name}</strong><br>
+                Gravité : ${risk.severity}<br>
+                Couverture actuelle : ${risk.totalCoverage}%<br>
+                ${risk.remediations.map((rem, remIndex) => `
+                    <div class="remediation-options">
+                        <span>${rem.description} (+${rem.coverage}% - Interne : ${rem.costInternal} € / Externe : ${rem.costExternal} €)</span>
+                        <div class="button-group">
+                            <button ${rem.selected ? 'disabled' : ''} onclick="addRemediation(${index}, ${remIndex}, 'internal')">Interne</button>
+                            <button ${rem.selected ? 'disabled' : ''} onclick="addRemediation(${index}, ${remIndex}, 'external')">Externe</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `).join('');
+    }
+</script>
+</body>
+</html>
+

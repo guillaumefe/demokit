@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstration OWASP A04: Conception non sécurisée</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .hidden {
+            display: none;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .admin-panel {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .code-example {
+            background: #f4f4f4;
+            border-left: 5px solid #666;
+            padding: 10px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+        .warning {
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #721c24;
+        }
+        .interactive {
+            background: #eef7ff;
+            padding: 15px;
+            border: 1px solid #8ecae6;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OWASP Top 10 2021</h1>
+        <h2>A04:2021 - Conception non sécurisée</h2>
+    </div>
+
+    <h1>Portail Utilisateur</h1>
+    <div id="loginForm">
+        <h2>Connexion</h2>
+        <input type="text" id="username" placeholder="Nom d'utilisateur">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <button onclick="login()">Se connecter</button>
+    </div>
+
+    <div id="userPanel" class="hidden">
+        <h2>Profil Utilisateur</h2>
+        <p>Bienvenue <span id="userDisplay"></span></p>
+        <button onclick="toggleAdminPanel()">Accéder au panneau admin</button>
+        <div id="adminPanel" class="admin-panel hidden">
+            <h3>Panneau Administrateur</h3>
+            <div id="userData"></div>
+            <button onclick="fetchSensitiveData()">Charger les données sensibles</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'admin' && password === 'admin123') {
+                currentUser = { username, role: 'admin' };
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('userPanel').classList.remove('hidden');
+                document.getElementById('userDisplay').textContent = username;
+            } else {
+                alert('Identifiants incorrects');
+            }
+        }
+
+        function toggleAdminPanel() {
+            if (currentUser && currentUser.role === 'admin') {
+                document.getElementById('adminPanel').classList.toggle('hidden');
+            } else {
+                alert('Accès refusé');
+            }
+        }
+
+        async function fetchSensitiveData() {
+            const mockData = [
+                { id: 1, info: 'Données confidentielles client 1' },
+                { id: 2, info: 'Données confidentielles client 2' }
+            ];
+            displaySensitiveData(mockData);
+        }
+
+        function displaySensitiveData(data) {
+            const userDataDiv = document.getElementById('userData');
+            userDataDiv.innerHTML = '';
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.textContent = item.info;
+                userDataDiv.appendChild(div);
+            });
+        }
+    </script>
+
+    <div class="documentation">
+        <h2>Documentation Technique</h2>
+        <h3>Conception et Vulnérabilités</h3>
+        <p>Cette application est conçue pour démontrer des failles de conception non sécurisées en mettant l'accent sur les risques suivants :</p>
+
+        <h4>1. Contrôle d'accès client-side</h4>
+        <p>Les droits d'accès sont validés uniquement côté client, ce qui signifie qu'un utilisateur malveillant peut manipuler le DOM pour accéder au panneau admin.</p>
+        <div class="code-example">
+document.getElementById('adminPanel').classList.remove('hidden');
+        </div>
+        <p>Un attaquant peut exécuter ce code dans la console pour afficher le panneau admin, même s'il n'est pas autorisé.</p>
+
+        <h4>2. Données sensibles exposées</h4>
+        <p>Les données sensibles sont simulées côté client et non protégées par un mécanisme de chiffrement ou une validation serveur.</p>
+        <div class="code-example">
+fetchSensitiveData(); // Charge les données simulées
+        </div>
+        <p>Un attaquant peut appeler cette fonction directement pour visualiser les données sensibles.</p>
+
+        <h4>3. Absence de session sécurisée</h4>
+        <p>L'état d'authentification est géré par une variable JavaScript (`currentUser`) qui peut être modifiée par un attaquant.</p>
+        <div class="code-example">
+currentUser = { username: 'hacker', role: 'admin' };
+        </div>
+        <p>Cette commande suffit pour simuler une élévation de privilèges.</p>
+
+        <h3>Comment exploiter les failles</h3>
+        <ol>
+            <li>Ouvrez la console du navigateur (<kbd>F12</kbd>).</li>
+            <li>Modifiez l'utilisateur actuel pour lui donner un rôle admin :
+                <div class="code-example">
+currentUser = { username: 'hacker', role: 'admin' };
+                </div>
+            </li>
+            <li>Affichez le panneau admin :
+                <div class="code-example">
+document.getElementById('adminPanel').classList.remove('hidden');
+                </div>
+            </li>
+            <li>Chargez les données sensibles en appelant :
+                <div class="code-example">
+fetchSensitiveData();
+                </div>
+            </li>
+        </ol>
+
+        <h3>Solutions</h3>
+        <p>Voici des solutions pour corriger ces failles :</p>
+        <ul>
+            <li>Valider les contrôles d'accès côté serveur.</li>
+            <li>Implémenter des sessions sécurisées avec des tokens JWT.</li>
+            <li>Ne jamais stocker de données sensibles dans le code client.</li>
+        </ul>
+    </div>
+
+    <div class="interactive">
+        <h3>Challenge : Exploitez la faille</h3>
+        <p>Votre mission :</p>
+        <ul>
+            <li>Accédez au panneau admin en manipulant le DOM.</li>
+            <li>Chargez les données sensibles via la console.</li>
+            <li>Essayez de supprimer ou de modifier ces données.</li>
+        </ul>
+        <p>Indice : Utilisez les fonctions exposées dans la console pour simuler une attaque réaliste.</p>
+    </div>
+</body>
+</html>
+

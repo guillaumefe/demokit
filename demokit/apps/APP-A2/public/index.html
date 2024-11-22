@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission: Résolution de Défis Cryptographiques</title>
+    <style>
+        :root {
+            --primary: #2196F3;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #f44336;
+            --info: #03A9F4;
+            --code-bg: #1e1e1e;
+            --text-light: #e0e0e0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .step {
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            margin: 15px 0;
+            background: white;
+            border-radius: 0 8px 8px 0;
+        }
+        .step.completed {
+            border-left-color: var(--success);
+            background: rgba(76, 175, 80, 0.05);
+        }
+        .tool-panel {
+            background: var(--code-bg);
+            color: var(--text-light);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .terminal {
+            min-height: 100px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        button {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover:not(:disabled) {
+            background: #1976D2;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .danger { color: var(--danger); }
+        .success { color: var(--success); }
+        .info { color: var(--info); }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 A02:2021-Cryptographic Failures</h1>
+        </div>
+        <div id="steps">
+        </div>
+    </div>
+    <script>
+        class CryptoMission {
+            constructor() {
+                this.currentStep = 1;
+                this.totalSteps = 4;
+                this.completedSteps = new Set();
+                this.initializeSteps();
+            }
+
+            initializeSteps() {
+                const stepsContainer = document.getElementById('steps');
+                stepsContainer.innerHTML = `
+                    <div class="step" id="step1">
+                        <h3>Étape 1: Modes de chiffrement</h3>
+                        <p>Découvrez les différents modes de chiffrement et leurs vulnérabilités.</p>
+                        <div class="tool-panel">
+                            <p><strong>Qu'est-ce que ECB ?</strong></p>
+                            <p>ECB est un mode de chiffrement où chaque bloc est traité indépendamment. Cela le rend vulnérable car des blocs identiques produisent les mêmes données chiffrées.</p>
+                            <p><strong>Solution:</strong> Préférez un mode comme CBC ou GCM qui introduit de l'aléatoire via un IV.</p>
+                            <button onclick="cryptoMission.completeStep(1)">Compris</button>
+                        </div>
+                    </div>
+                    <div class="step" id="step2">
+                        <h3>Étape 2: Utilisation d'IV</h3>
+                        <p>Découvrez l'importance de l'IV (vecteur d'initialisation) dans le chiffrement.</p>
+                        <div class="tool-panel">
+                            <p>Un IV est une valeur aléatoire ajoutée au chiffrement pour empêcher les modèles répétitifs.</p>
+                            <p>Dans AES-CBC, un IV doit être aléatoire et unique.</p>
+                            <button onclick="cryptoMission.completeStep(2)">Suivant</button>
+                        </div>
+                    </div>
+                    <div class="step" id="step3">
+                        <h3>Étape 3: Migration vers AES-GCM</h3>
+                        <p>AES-GCM combine chiffrement et authentification. Utilisez <code>crypto.createCipheriv</code> pour passer à AES-GCM.</p>
+                        <div class="tool-panel">
+                            <pre class="code-block">
+// Exemple de migration
+const crypto = require('crypto');
+function encrypt(data, key) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-128-gcm', key, iv);
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return { encrypted, iv };
+}
+                            </pre>
+                            <button onclick="cryptoMission.completeStep(3)">J'ai compris</button>
+                        </div>
+                    </div>
+                    <div class="step" id="step4">
+                        <h3>Étape 4: Corrigez le code</h3>
+                        <p>Corrigez le code suivant pour qu'il utilise AES-GCM avec un IV sécurisé :</p>
+                        <div class="tool-panel">
+                            <pre class="code-block">
+// Code vulnérable
+function encrypt(data, key) {
+    const cipher = crypto.createCipher('aes-128-ecb', key);
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return encrypted;
+}
+                            </pre>
+                            <textarea id="codeEditor" rows="10" style="width:100%;" placeholder="
+function encrypt(data, key) {
+    // Import nécessaire si ce n'est pas déjà inclus
+    const crypto = require('crypto'); 
+    // Génère un IV aléatoire de 16 octets
+    const iv = crypto.randomBytes(16); 
+    // Utilise AES-GCM avec un IV
+    const cipher = crypto.createCipheriv('aes-128-gcm', key, iv); 
+    // Chiffre les données
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    // Finalise le chiffrement
+    encrypted += cipher.final('hex'); 
+    // Récupère le tag d'authentification
+    const authTag = cipher.getAuthTag(); 
+    // Renvoie les données chiffrées, l'IV et le tag
+    return { encrypted, iv: iv.toString('hex'), authTag: authTag.toString('hex') };
+}"></textarea>
+                            <button onclick="cryptoMission.checkCode()">Vérifier le code</button>
+                            <div id="feedback" class="terminal"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            completeStep(stepNumber) {
+                document.getElementById(`step${stepNumber}`).classList.add('completed');
+                const nextStep = document.getElementById(`step${stepNumber + 1}`);
+                if (nextStep) nextStep.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            checkCode() {
+                const userCode = document.getElementById('codeEditor').value;
+                const feedback = document.getElementById('feedback');
+                feedback.innerHTML = '';
+                if (/createCipher\(.+ecb.+\)/i.test(userCode)) {
+                    feedback.innerHTML = '<p class="danger">⚠ Vous utilisez encore le mode ECB. Remplacez-le par GCM.</p>';
+                } else if (!/createCipheriv\(/i.test(userCode)) {
+                    feedback.innerHTML = '<p class="danger">⚠ Utilisez createCipheriv avec un IV sécurisé.</p>';
+                } else if (!/aes-(128|192|256)-gcm/i.test(userCode)) {
+                    feedback.innerHTML = '<p class="danger">⚠ Utilisez AES-GCM pour sécuriser le chiffrement.</p>';
+                } else {
+                    feedback.innerHTML = '<p class="success">✅ Code corrigé avec succès !</p>';
+                }
+            }
+        }
+
+        const cryptoMission = new CryptoMission();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Demo Kit</title>
+    <link id="favicon" rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .category-container {
+            margin-bottom: 30px;
+        }
+        .category-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .app-container {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            position: relative;
+            border-radius: 5px;
+        }
+        .app-container.done {
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+        .done-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4caf50;
+            color: #fff;
+            padding: 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .app-container a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .app-container a:hover {
+            background-color: #218838;
+        }
+        .app-container button {
+            margin-top: 10px;
+            background-color: #007bff;
+            padding: 4px 10px;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .app-container button.done {
+            background-color: #4caf50;
+        }
+        .app-container button:not(.done):hover {
+            background-color: #0056b3;
+        }
+        .app-container button.done:hover {
+            background-color: #388e3c;
+        }
+    </style>
+    <script>
+        const pageTitle = "Demo Kit";
+        const sectionTitle = "TOP10 OWASP Application Challenges";
+
+        const vulnerabilities = {{VULNERABILITIES_DATA}};
+
+        window.onload = function() {
+            document.getElementById('page-title').textContent = pageTitle;
+            document.querySelector('h1').textContent = sectionTitle;
+
+            const container = document.getElementById('app-list');
+
+            // Regrouper les applications par catégorie
+            const categories = {};
+            vulnerabilities.forEach(app => {
+                if (!categories[app.category]) {
+                    categories[app.category] = [];
+                }
+                categories[app.category].push(app);
+            });
+
+            // Afficher les applications par catégorie
+            Object.keys(categories).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-container';
+
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = category;
+
+                categoryDiv.appendChild(categoryTitle);
+
+                categories[category].forEach(app => {
+                    const appDiv = document.createElement('div');
+                    appDiv.className = 'app-container';
+                    appDiv.id = `app-${app.id}`;
+
+                    appDiv.innerHTML = `
+                        <h2>${app.title}</h2>
+                        <p>${app.description}</p>
+                        <a href="http://${window.location.hostname}:${app.port}" id="demo-link-${app.id}">Demo</a>
+                        <button onclick="toggleDone('${app.id}')">Mark</button>
+                    `;
+
+                    categoryDiv.appendChild(appDiv);
+                });
+
+                container.appendChild(categoryDiv);
+            });
+        };
+
+        function toggleDone(appId) {
+            const appContainer = document.getElementById(`app-${appId}`);
+            const button = appContainer.querySelector('button');
+            const link = appContainer.querySelector(`#demo-link-${appId}`);
+            const isDone = appContainer.classList.contains('done');
+
+            if (isDone) {
+                button.textContent = "Mark";
+                button.classList.remove('done');
+                appContainer.classList.remove('done');
+                const doneLabel = appContainer.querySelector('.done-label');
+                if (doneLabel) doneLabel.remove();
+                link.style.display = 'inline-block';
+            } else {
+                button.textContent = "Done";
+                button.classList.add('done');
+                appContainer.classList.add('done');
+                const doneLabel = document.createElement('div');
+                doneLabel.className = 'done-label';
+                doneLabel.textContent = 'Completed';
+                appContainer.appendChild(doneLabel);
+                link.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1></h1>
+    <div id="app-list"></div>
+</body>
+</html>

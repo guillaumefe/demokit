@@ -1,0 +1,32 @@
+# Ignore compiled python files
+*.pyc
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.log
+
+# Ignore virtual environments
+__pycache__/
+env/
+
+# Ignore Mac OS X specific files
+.DS_Store
+
+# Ignore other unnecessary files/directories
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.fdb_latexmk
+*.fls
+*.fot
+*.ind
+*.idx
+*.ilg
+*.log
+*.lol
+*.nav
+*.out
+*.snm
+*.toc

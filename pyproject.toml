@@ -1,0 +1,31 @@
+[build-system]
+requires = ["flit_core>=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "demokit"
+authors = [
+    {name = "guillaumefe", email = ""}
+]
+dynamic = ["version"]
+description = "Kit de démonstration d'applications"
+dependencies = [
+    "click",
+    "setuptools"  # Ajout pour pkg_resources
+]
+
+[project.urls]
+Home = "https://github.com/guillaumefe/owasp"
+
+[project.scripts]
+demokit = "demokit.__main__:main"
+
+[tool.flit.module]
+name = "demokit"
+
+[tool.flit.sdist]
+include = [
+    "demokit/apps/*",
+    "demokit/apps/**/*",
+    "demokit/*.html"
+]

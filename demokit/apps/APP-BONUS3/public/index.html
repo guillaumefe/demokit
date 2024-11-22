@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Simulation - Exploitation Pédagogique</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #33ff33;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        #terminal {
+            background-color: #000;
+            border-radius: 5px;
+            padding: 20px;
+            height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #33ff33;
+            box-shadow: 0 0 10px rgba(51, 255, 51, 0.3);
+        }
+
+        #output {
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        #input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #prompt {
+            margin-right: 10px;
+        }
+
+        #command-input {
+            background-color: transparent;
+            border: none;
+            color: #33ff33;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            flex-grow: 1;
+            outline: none;
+        }
+
+        .puzzle {
+            background-color: #0a0a0a;
+            border: 1px solid #33ff33;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .success { color: #33ff33; }
+        .error { color: #ff3333; }
+        .warning { color: #ffff33; }
+        .info { color: #3399ff; }
+        .context { color: #ff99cc; }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div id="output"></div>
+        <div id="input-line">
+            <span id="prompt">&gt;</span>
+            <input type="text" id="command-input" spellcheck="false" autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        
+        class ExploitSimulation {
+    constructor() {
+        this.state = "initial";
+        this.subState = "";
+        this.output = document.getElementById('output');
+        this.input = document.getElementById('command-input');
+        this.setupEventListeners();
+        this.commandHistory = [];
+        this.historyIndex = -1;
+        this.initialize();
+    }
+
+    async initialize() {
+        const welcomeMessage = [
+            "=== Simulation d'Exploitation de la CVE-2014-7228 ===",
+            "",
+            "CONTEXTE : Vous êtes face à un serveur Joomla! potentiellement vulnérable...",
+            "OBJECTIF : Explorer méthodiquement le système pour confirmer et exploiter la vulnérabilité...",
+            "Tapez 'help' pour voir les commandes disponibles et commencer.\n"
+        ];
+
+        for (const line of welcomeMessage) {
+            await this.typeText(line);
+        }
+    }
+
+    setupEventListeners() {
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = this.input.value.trim();
+                if (command) {
+                    this.handleCommand(command);
+                    this.commandHistory.push(command);
+                    this.historyIndex = this.commandHistory.length;
+                }
+                this.input.value = '';
+            }
+        });
+    }
+
+    async typeText(text, className = '') {
+        const line = document.createElement('div');
+        if (className) line.className = className;
+        this.output.appendChild(line);
+
+        for (const char of text) {
+            line.textContent += char;
+            await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        this.output.scrollTop = this.output.scrollHeight;
+    }
+
+    async handleCommand(command) {
+        await this.typeText(`> ${command}`);
+        const response = await this.processCommand(command.toLowerCase());
+        await this.typeText(response);
+    }
+
+processCommand(command) {
+    switch (this.state) {
+        case "initial":
+            return this.handleInitialState(command);
+        case "fingerprinting":
+            return this.handleFingerprinting(command);
+        case "path_discovery":
+            return this.handlePathDiscovery(command);
+        case "payload_construction":
+            return this.handlePayloadConstruction(command);
+        case "exploitation":
+            return this.handleExploitation(command);
+        case "exploitation_complete":
+            return this.handleCompletion(command);
+        default:
+            return "Erreur d'état. Tapez 'restart' pour recommencer.";
+    }
+}
+
+handleCompletion(command) {
+    if (command === "end") {
+        return `
+=== SIMULATION TERMINÉE ===
+Félicitations ! Vous avez complété toutes les étapes de la simulation.
+Tapez 'restart' pour recommencer la simulation ou fermez cette fenêtre.
+`;
+    } else if (command === "restart") {
+        this.state = "initial";
+        this.initialize();
+        return "Redémarrage de la simulation...";
+    }
+    return "Commande non reconnue. Tapez 'end' pour terminer ou 'restart' pour recommencer.";
+}
+
+
+    handleInitialState(command) {
+        if (command === "help") {
+            return `
+=== GUIDE DÉTAILLÉ DE L'EXPLOITATION ===
+1. fingerprint - Identifier les versions
+2. discover - Localiser les chemins
+3. construct - Créer le payload
+4. exploit - Lancer l'exploitation
+
+Pour commencer, tapez 'fingerprint' pour analyser la cible.
+`;
+        } else if (command === "fingerprint") {
+            this.state = "fingerprinting";
+            return this.startFingerprintingGame();
+        }
+        return "Commande inconnue. Tapez 'help' pour voir les options.";
+    }
+
+    startFingerprintingGame() {
+        this.subState = "version_puzzle";
+        return `
+=== MINI-JEU : IDENTIFICATION DES VERSIONS ===
+OBJECTIF : 
+Déterminer la version de Joomla! en analysant la réponse HTTP
+
+ÉNIGME :
+HTTP/1.1 200 OK
+Server: Apache/2.4.7
+X-Powered-By: PHP/5.5.9
+Set-Cookie: c4b3c6f=j3.2.1.f4k3
+
+Entrez la version de Joomla! (format : x.y.z)
+Astuce : le cookie contient des informations utiles.
+Tapez 'hint' pour obtenir de l'aide ou entrez la version trouvée.
+`;
+    }
+
+    handleFingerprinting(command) {
+        if (command === "hint") {
+            return "INDICE : Recherchez un format numérique x.y.z dans le cookie.";
+        }
+        if (this.subState === "version_puzzle") {
+            if (command === "3.2.1") {
+                this.state = "path_discovery";
+                return `
+[+] Version 3.2.1 identifiée avec succès !
+Tapez 'discover' pour passer au mini-jeu de découverte des chemins.
+`;
+            }
+            return "Version incorrecte. Regardez attentivement le cookie.";
+        }
+        return "Commande inconnue. Complétez d'abord le mini-jeu de version.";
+    }
+
+    startPathDiscoveryGame() {
+        this.subState = "path_puzzle";
+        return `
+=== MINI-JEU : DÉCOUVERTE DES CHEMINS ===
+OBJECTIF : Reconstituer le chemin d'accès au composant vulnérable.
+
+FRAGMENTS DISPONIBLES :
+1. /administrator
+2. /components
+3. /com_kickstart
+4. /index.php
+
+ÉNIGME :
+Reconstituez le chemin vulnérable (ex: 1432)
+
+Astuce : Le chemin commence toujours par 'administrator' et se termine par 'index.php'.
+`;
+    }
+
+    handlePathDiscovery(command) {
+        if (command === "discover") {
+            return this.startPathDiscoveryGame();
+        }
+        if (command === "hint") {
+            return "INDICE : Le chemin commence par 'administrator' et se termine par 'index.php'.";
+        }
+        if (command === "1234") {  // L'ordre correct est 1 -> 2 -> 3 -> 4
+            this.state = "payload_construction";
+            return `
+    [+] Chemin d'accès identifié : /administrator/components/com_kickstart/index.php
+    Tapez 'construct' pour passer à la construction du payload.
+    `;
+        }
+        return "Commande incorrecte ou réponse fausse. Essayez 'hint' pour un indice.";
+    }
+
+
+startPayloadConstructionGame() {
+    this.subState = "payload_puzzle";
+    return `
+=== MINI-JEU : CONSTRUCTION DU PAYLOAD ===
+OBJECTIF : Construire un payload pour exploiter la vulnérabilité CVE-2014-7228 sur le composant Joomla! Akeeba Kickstart.
+
+FRAGMENTS DISPONIBLES :
+1. cmd=
+2. eval
+3. base64_decode
+4. $_REQUEST['cmd']
+5. ; ?>
+
+ÉNIGME :
+Assemblez les fragments pour construire un payload PHP qui exécutera la commande de votre choix sur le serveur.
+
+INDICE :
+- Utilisez 'eval' pour interpréter le code et 'base64_decode' pour masquer la commande.
+- La commande est transmise dans la requête HTTP.
+
+Entrez les numéros dans le bon ordre pour constituer le payload (ex: 12345).
+Tapez 'hint' pour obtenir de l'aide.
+`;
+}
+
+handlePayloadConstruction(command) {
+    if (command === "construct") {
+        return this.startPayloadConstructionGame();
+    }
+    if (command === "hint") {
+        return `
+INDICE :
+Pour créer un payload fonctionnel, placez d'abord 'eval' pour évaluer du code.
+Utilisez 'base64_decode' pour cacher la commande et $_REQUEST['cmd'] pour la recevoir.
+Le payload final doit être capable de décoder et d’exécuter une commande envoyée par l’attaquant.
+`;
+    }
+    if (command === "21345") {  // Ordre correct : eval(base64_decode($_REQUEST['cmd']); ?>
+        this.state = "exploitation";
+        return `
+[+] Payload PHP construit correctement : eval(base64_decode($_REQUEST['cmd']));
+Tapez 'exploit' pour envoyer le payload au serveur.
+`;
+    }
+    return "Payload incorrect ou réponse fausse. Essayez 'hint' pour un indice.";
+}
+
+handleExploitation(command) {
+    if (command === "exploit") {
+        return this.startExploitGame();
+    }
+    if (command === "hint") {
+        return `
+INDICE : Commencez par l'URL du serveur, ajoutez '?cmd=' puis le payload encodé en Base64.
+Le format final doit ressembler à : URL?cmd=payload.
+`;
+    }
+    if (command === "123") {  // L’ordre correct pour assembler la requête d’exploitation
+        this.state = "exploitation_complete";
+        return `
+[+] Requête d'exploitation construite correctement :
+http://vulnerable-server.com/administrator/components/com_kickstart/index.php?cmd=ZWNobyAnSGFjayBzdWNjZXNzZnVsIQ==
+
+Votre commande a été envoyée avec succès ! La vulnérabilité est exploitée.
+Tapez 'end' pour terminer la simulation.
+`;
+    }
+    return "Requête incorrecte ou réponse fausse. Essayez 'hint' pour un indice.";
+}
+
+startExploitGame() {
+    this.subState = "exploit_send";
+    return `
+=== MINI-JEU : ENVOI DU PAYLOAD ===
+OBJECTIF : Assembler et envoyer une requête HTTP pour exploiter la vulnérabilité CVE-2014-7228.
+
+FRAGMENTS DISPONIBLES :
+1. http://vulnerable-server.com/administrator/components/com_kickstart/index.php?
+2. cmd=
+3. ZWNobyAnSGFjayBzdWNjZXNzZnVsIQ==  (Base64 pour "echo 'Hack successful!'")
+
+ÉTAPE :
+Assemblez les fragments dans le bon ordre pour créer une requête d'exploitation valide.
+
+INDICE :
+- Commencez par l'URL, ajoutez le paramètre de commande 'cmd', et enfin le payload encodé.
+
+Tapez 'hint' pour obtenir un indice, ou entrez les numéros dans l'ordre (ex: 123) pour assembler la requête.
+`;
+}
+
+}
+
+
+        window.addEventListener('load', () => {
+            new ExploitSimulation();
+            document.getElementById('command-input').focus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Race Condition - Simulation</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; margin: 20px; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .concept { background: #2d2d2d; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .simulation { background: #2d2d2d; padding: 20px; border-radius: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .zone { border: 2px dashed #666; padding: 15px; min-height: 200px; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .zone-title { font-weight: bold; margin-bottom: 10px; text-align: center; }
+        #user-zone { border-color: #4CAF50; }
+        #backup-zone { border-color: #2196F3; }
+        #admin-zone { border-color: #f44336; }
+        .file { background: #4CAF50; color: white; padding: 10px; border-radius: 4px; margin: 5px; width: 80%; text-align: center; }
+        .process { background: #333; color: white; padding: 10px; border-radius: 4px; margin: 5px; width: 80%; text-align: center; }
+        .controls { background: #2d2d2d; padding: 20px; border-radius: 8px; }
+        .steps button { display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; color: white; }
+        .steps button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #step1-btn { background: #4CAF50; }
+        #step2-btn { background: #2196F3; }
+        #step3-btn { background: #f44336; }
+        .logs { background: #000; color: #0f0; font-family: monospace; padding: 10px; margin-top: 20px; height: 150px; overflow-y: auto; }
+        .alert { color: #ff0000; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="concept">
+            <h2>💡 Concept d'Exploitation</h2>
+            <p>1. Un fichier appât nommé <strong>clickme</strong> est placé dans /home.</p>
+            <p>2. Pendant la copie, on remplace clickme par un lien symbolique pointant vers /admin.</p>
+            <p>3. Si le fichier est exécuté dans /admin, l'attaquant obtient un accès privilégié.</p>
+        </div>
+        <div class="simulation">
+            <div class="zone" id="user-zone">
+                <div class="zone-title">/home (Zone User)</div>
+                <div class="file" id="target-file">clickme</div>
+                <div class="process">[User Process]<br>Droits limités</div>
+            </div>
+            <div class="zone" id="backup-zone">
+                <div class="zone-title">/backup (Zone Backup)</div>
+                <div class="process" id="backup-process">[Backup Process]</div>
+            </div>
+            <div class="zone" id="admin-zone">
+                <div class="zone-title">/admin (Zone Admin)</div>
+                <div class="process" id="admin-process">[Admin Process]</div>
+            </div>
+        </div>
+        <div class="controls">
+            <h3>Exploitation pas à pas:</h3>
+            <div class="steps">
+                <button id="step1-btn" onclick="step1()">1. Placer clickme dans /home</button>
+                <button id="step2-btn" onclick="step2()" disabled>2. Remplacer par lien symbolique au bon moment</button>
+                <button id="step3-btn" onclick="step3()" disabled>3. Le processus admin exécute clickme</button>
+            </div>
+            <div class="logs" id="logs"></div>
+        </div>
+    </div>
+    <script>
+        const logs = document.getElementById('logs');
+        const backupProcess = document.getElementById('backup-process');
+        let copying = false;
+        let detectionActive = false;
+        let inAdmin = false;
+
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML = `[${time}] ${message}<br>` + logs.innerHTML;
+        }
+
+        function startBackup() {
+            copying = true;
+            log('🔄 Le processus de backup commence la copie de clickme');
+            setTimeout(() => {
+                copying = false;
+                if (!inAdmin) {
+                    log('📁 Copie terminée vers /backup');
+                }
+                if (detectionActive && !inAdmin) {
+                    log('<span class="alert">🚨 Alerte: Action suspecte détectée pendant la copie!</span>');
+                    resetSimulation();
+                }
+            }, 3000);
+        }
+
+        function startDetection() {
+            detectionActive = true;
+            setTimeout(() => { detectionActive = false; }, 1500);
+        }
+
+        function resetSimulation() {
+            document.getElementById('step1-btn').disabled = false;
+            document.getElementById('step2-btn').disabled = true;
+            document.getElementById('step3-btn').disabled = true;
+            log('<span class="alert">🔄 Redémarrage de la simulation...</span>');
+        }
+
+        function step1() {
+            log('✅ Fichier clickme placé dans /home');
+            document.getElementById('step1-btn').disabled = true;
+            document.getElementById('step2-btn').disabled = false;
+            setInterval(() => {
+                if (!copying) startBackup();
+            }, 5000);
+        }
+
+        function step2() {
+            if (copying) {
+                startDetection();
+                log('⚡ Timing de la race condition en cours...');
+                setTimeout(() => {
+                    inAdmin = true;
+                    const backupZone = document.getElementById('backup-zone');
+                    const file = document.getElementById('target-file');
+                    const clone = file.cloneNode(true);
+                    clone.style.background = '#f44336';
+                    backupZone.appendChild(clone);
+                    log('✅ clickme copié vers /admin');
+                    document.getElementById('step2-btn').disabled = true;
+                    document.getElementById('step3-btn').disabled = false;
+                }, 1000);
+            } else {
+                log('<span class="alert">⚠️ Échec: Timing incorrect, vous avez été détecté!</span>');
+                resetSimulation();
+            }
+        }
+
+        function step3() {
+            if (inAdmin) {
+                log('🔍 Processus admin détecte clickme dans /admin');
+                setTimeout(() => {
+                    log('⚙️ Exécution de clickme avec privilèges admin');
+                    log('✨ Accès privilégié obtenu!');
+                    document.getElementById('step3-btn').disabled = true;
+                }, 1000);
+            } else {
+                log('<span class="alert">🚨 Échec: Le fichier n\'est pas dans /admin!</span>');
+                resetSimulation();
+            }
+        }
+
+        log('💻 Simulation initialisée');
+        log('ℹ️ Attendez le bon moment pour remplacer clickme par un lien symbolique vers /admin pendant la copie');
+    </script>
+</body>
+</html>
