@@ -1,448 +1,279 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OWASP Top Ten 2021 - Vulnérabilités (Version Apprenant)</title>
-    <style>
-        /* Styles identiques à la version originale */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .warning {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        .card {
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .card h2 {
-            color: #007BFF;
-            font-size: 20px;
-        }
-        .card p {
-            color: #555;
-        }
-        .code-block {
-            background-color: #e0f7fa;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        button {
-            display: block;
-            margin: 30px auto;
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Guide Professionnel des Vulnérabilités OWASP – Explications Détaillées</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    header, footer {
+      text-align: center;
+      padding: 20px;
+    }
+    header {
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 30px;
+    }
+    h1 {
+      font-size: 2em;
+      color: #003366;
+    }
+    h2 {
+      font-size: 1.6em;
+      color: #00509e;
+      margin-bottom: 10px;
+    }
+    .vulnerability {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    .section-label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .explanation {
+      margin: 5px 0 15px 0;
+      text-align: justify;
+    }
+    footer {
+      font-size: 0.9em;
+      color: #666;
+      border-top: 2px solid #ddd;
+      margin-top: 30px;
+      padding-top: 15px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="warning">
-            <strong>Avertissement légal :</strong> Cette page présente des vulnérabilités à des fins éducatives seulement. Toute utilisation non autorisée est illégale et peut entraîner des poursuites pénales.
-        </div>
-        <h1>OWASP Top Ten 2021 - Vulnérabilités</h1>
+  <header>
+    <h1>Guide Professionnel des Vulnérabilités OWASP</h1>
+    <p>Explications détaillées des principaux risques de sécurité applicative, expliquées depuis les fondamentaux.</p>
+  </header>
 
-        <!-- A01:2021 - Broken Access Control -->
-        <div class="card">
-            <h2>1. Broken Access Control (A01:2021)</h2>
-            <p>Permet à des utilisateurs non autorisés d'accéder ou de modifier des ressources sensibles.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                if ($_GET['isAdmin'] == 'true') {<br>
-                    echo "Bienvenue, administrateur";<br>
-                }<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                session_start();<br>
-                if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {<br>
-                    header("Location: unauthorized.php");<br>
-                    exit();<br>
-                }<br>
-                echo "Bienvenue, administrateur";<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A02:2021 - Cryptographic Failures -->
-        <div class="card">
-            <h2>2. Cryptographic Failures (A02:2021)</h2>
-            <p>Problèmes liés à une mauvaise gestion des données sensibles.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $token = "123456"; // Token non sécurisé<br>
-                echo "Votre token : $token";<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $token = bin2hex(random_bytes(16));<br>
-                echo "Votre token : $token";<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A03:2021 - Injection -->
-        <div class="card">
-            <h2>3. Injection (A03:2021)</h2>
-            <p>Exploitation de failles dans la gestion des entrées utilisateur pour exécuter des commandes non prévues.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $id = $_GET['id'];<br>
-                $query = "DELETE FROM users WHERE id = $id";<br>
-                mysqli_query($conn, $query);<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $id = intval($_GET['id']);<br>
-                $query = "DELETE FROM users WHERE id = ?";<br>
-                $stmt = $conn->prepare($query);<br>
-                $stmt->bind_param("i", $id);<br>
-                $stmt->execute();<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A04:2021 - Insecure Design -->
-        <div class="card">
-            <h2>4. Insecure Design (A04:2021)</h2>
-            <p>Absence de considération pour les menaces potentielles dès la phase de conception.</p>
-            <p><strong>Illustration du processus :</strong></p>
-            <canvas id="designGraph" width="600" height="400" style="background-color: #f9f9f9; border: 1px solid #ccc; display: block; margin: 0 auto;"></canvas>
-            <p style="text-align: center;"><em>Le processus vulnérable néglige les étapes critiques comme l'analyse des menaces et les tests de sécurité.</em></p>
-        </div>
-
-        <!-- Script pour le graphique -->
-        <script>
-            const canvas = document.getElementById('designGraph');
-            const ctx = canvas.getContext('2d');
-
-            // Dimensions et paramètres
-            const startX = 50;
-            const startY = 50;
-            const stepX = 150;
-            const stepY = 50;
-
-            // Processus vulnérable
-            ctx.fillStyle = '#FF0000';
-            ctx.font = "14px Arial";
-            ctx.fillText("Processus vulnérable", startX, startY - 10);
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(startX + stepX, startY + stepY);
-            ctx.lineTo(startX + 2 * stepX, startY + 2 * stepY);
-            ctx.lineTo(startX + 3 * stepX, startY + 3 * stepY);
-            ctx.strokeStyle = '#FF0000';
-            ctx.stroke();
-
-            ctx.fillText("Planification", startX + stepX - 40, startY + stepY - 10);
-            ctx.fillText("Développement", startX + 2 * stepX - 40, startY + 2 * stepY - 10);
-            ctx.fillText("Déploiement", startX + 3 * stepX - 40, startY + 3 * stepY - 10);
-
-            // Processus sécurisé
-            ctx.fillStyle = '#007BFF';
-            ctx.fillText("Processus sécurisé", startX, startY + 5 * stepY - 10);
-            ctx.beginPath();
-            ctx.moveTo(startX, startY + 5 * stepY);
-            ctx.lineTo(startX + stepX, startY + 4 * stepY);
-            ctx.lineTo(startX + 2 * stepX, startY + 3 * stepY);
-            ctx.lineTo(startX + 3 * stepX, startY + 2 * stepY);
-            ctx.lineTo(startX + 4 * stepX, startY + stepY);
-            ctx.strokeStyle = '#007BFF';
-            ctx.stroke();
-
-            ctx.fillText("Analyse des menaces", startX + stepX - 40, startY + 4 * stepY - 10);
-            ctx.fillText("Planification", startX + 2 * stepX - 40, startY + 3 * stepY - 10);
-            ctx.fillText("Développement sécurisé", startX + 3 * stepX - 40, startY + 2 * stepY - 10);
-            ctx.fillText("Tests de sécurité", startX + 4 * stepX - 40, startY + stepY - 10);
-
-            // Légende
-            ctx.fillStyle = '#000';
-            ctx.fillText("Rouge : Processus vulnérable", startX, startY + 8 * stepY);
-            ctx.fillText("Bleu : Processus sécurisé", startX, startY + 8 * stepY + 20);
-        </script>
-
-        <!-- A05:2021 - Security Misconfiguration -->
-        <div class="card">
-            <h2>5. Security Misconfiguration (A05:2021)</h2>
-            <p>Erreurs dans les configurations de sécurité, comme des paramètres par défaut non sécurisés.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                ini_set('display_errors', 1);<br>
-                error_reporting(E_ALL);<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                ini_set('display_errors', 0);<br>
-                error_reporting(0);<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A06:2021 - Vulnerable and Outdated Components -->
-        <div class="card">
-            <h2>6. Vulnerable and Outdated Components (A06:2021)</h2>
-            <p>Utilisation de composants obsolètes ou vulnérables exposant l'application à des attaques.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;dependency&gt;<br>
-                    &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;<br>
-                    &lt;artifactId&gt;log4j-core&lt;/artifactId&gt;<br>
-                    &lt;version&gt;2.13.3&lt;/version&gt; &lt;!-- Version vulnérable --&gt;<br>
-                &lt;/dependency&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;dependency&gt;<br>
-                    &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;<br>
-                    &lt;artifactId&gt;log4j-core&lt;/artifactId&gt;<br>
-                    &lt;version&gt;2.20.0&lt;/version&gt; &lt;!-- Version sécurisée --&gt;<br>
-                &lt;/dependency&gt;
-            </div>
-        </div>
-
-        <!-- A07:2021 - Identification and Authentication Failures -->
-        <div class="card">
-            <h2>7. Identification and Authentication Failures (A07:2021)</h2>
-            <p>Failles dans les mécanismes d'authentification.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                if ($_POST['password'] == 'password123') {<br>
-                    echo "Authentifié !";<br>
-                }<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                if (password_verify($_POST['password'], $hashedPassword)) {<br>
-                    echo "Authentifié !";<br>
-                }<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A08:2021 - Software and Data Integrity Failures -->
-        <div class="card">
-            <h2>8. Software and Data Integrity Failures (A08:2021)</h2>
-            <p>Manque de vérification des mises à jour logicielles ou des données critiques.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $file = $_GET['file'];<br>
-                include($file); // Permet l'inclusion de fichiers non sécurisés<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $allowed_files = ['header.php', 'footer.php'];<br>
-                $file = $_GET['file'];<br>
-                if (in_array($file, $allowed_files)) {<br>
-                    include($file);<br>
-                } else {<br>
-                    echo "Fichier non autorisé !";<br>
-                }<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A09:2021 - Security Logging and Monitoring Failures -->
-        <div class="card">
-            <h2>9. Security Logging and Monitoring Failures (A09:2021)</h2>
-            <p>Absence de journalisation ou de surveillance pour détecter les activités malveillantes.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                // Aucune journalisation en cas d'échec de connexion<br>
-                if ($login_failed) {<br>
-                    echo "Échec de connexion";<br>
-                }<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                if ($login_failed) {<br>
-                    error_log("Tentative de connexion échouée pour l'utilisateur : $username", 0);<br>
-                    echo "Échec de connexion";<br>
-                }<br>
-                ?&gt;
-            </div>
-        </div>
-
-        <!-- A10:2021 - Server-Side Request Forgery (SSRF) -->
-        <div class="card">
-            <h2>10. Server-Side Request Forgery (SSRF) (A10:2021)</h2>
-            <p>Permet à un attaquant de forcer un serveur à effectuer des requêtes non prévues.</p>
-            <p><strong>Exemple de code vulnérable :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $url = $_GET['url'];<br>
-                $response = file_get_contents($url); // Requête non vérifiée<br>
-                echo $response;<br>
-                ?&gt;
-            </div>
-            <p><strong>Code corrigé :</strong></p>
-            <div class="code-block">
-                &lt;?php<br>
-                $url = $_GET['url'];<br>
-                $allowed_domains = ['example.com', 'mysite.com'];<br>
-                $parsed_url = parse_url($url);<br>
-                if (in_array($parsed_url['host'], $allowed_domains)) {<br>
-                    $response = file_get_contents($url);<br>
-                    echo $response;<br>
-                } else {<br>
-                    echo "Domaine non autorisé !";<br>
-                }<br>
-                ?&gt;
-            </div>
-        </div>
+  <section>
+    <!-- 1. Broken Access Control -->
+    <div class="vulnerability">
+      <h2>1. Contrôle d'accès défaillant (Broken Access Control)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        Le contrôle d'accès est le processus qui détermine qui a la permission d'accéder à quelles ressources dans un système. Dans un environnement informatique, il s'agit de règles et de mécanismes qui garantissent que seuls les utilisateurs autorisés peuvent consulter, modifier ou exécuter certaines opérations. Cela repose sur l'attribution de rôles, de permissions et de politiques définies lors de la conception de l'application.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Partir de zéro, c'est comprendre que chaque utilisateur est identifié dans le système (souvent via un identifiant unique) et que ce système doit vérifier systématiquement son droit d'accéder à une ressource. Si cette vérification est insuffisante ou mal implémentée, un utilisateur peut dépasser ses privilèges et accéder à des données ou fonctions qui lui sont normalement interdites. Cela peut résulter d'erreurs dans le code, d'une mauvaise configuration ou d'une conception inadéquate des règles d'accès.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une faille dans le contrôle d'accès peut mener à la divulgation d'informations sensibles, à la modification non autorisée de données ou à des actions malveillantes sur le système.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un utilisateur, en manipulant l'URL d'une application, accède à la section réservée aux administrateurs sans avoir les droits correspondants.
+      </p>
     </div>
 
-    <!-- Script pour le bouton interactif -->
-    <script>
-        function startgame() {
-            let asnw = prompt("URL donné par le formateur", "http://");
-            if(asnw) {
-                document.body.innerHTML = `
-                    <div class="hacker-container">
-                        <div class="grid-background"></div>
-                        <div class="floating-numbers"></div>
-                        <a href="${asnw}" class="cyber-button">
-                            <span class="cyber-button__glitch"></span>
-                            <span class="cyber-button__icon">➜</span>
-                            <span class="cyber-button__text">Now you are free to hack</span>
-                            <span class="cyber-button__tag">[Click to proceed]</span>
-                        </a>
-                    </div>
-                `;
+    <!-- 2. Cryptographic Failures -->
+    <div class="vulnerability">
+      <h2>2. Failles cryptographiques (Cryptographic Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        La cryptographie est la science qui consiste à transformer des informations afin de les protéger contre toute lecture non autorisée. Les techniques cryptographiques utilisent des algorithmes et des clés pour chiffrer (rendre illisible) et déchiffrer (rendre lisible) des données.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Pour débuter, il est important de comprendre qu'un message ou une donnée peut être converti en une forme codée par le biais d'un algorithme de chiffrement. La sécurité repose sur la complexité de cet algorithme et sur la confidentialité de la clé utilisée. Si la clé est faible, mal protégée ou si l'algorithme présente des vulnérabilités, les attaquants peuvent réussir à inverser le processus et accéder aux informations sensibles.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une faille cryptographique peut entraîner la compromission de données confidentielles, comme des mots de passe ou des informations financières, exposant ainsi l'organisation à des risques majeurs.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un système qui utilise un chiffrement obsolète ou une clé trop courte, permettant à un attaquant de déchiffrer rapidement les données sensibles.
+      </p>
+    </div>
 
-                const style = document.createElement('style');
-                style.textContent = `
-                    /* Styles pour l'animation du bouton */
-                    .cyber-button {
-                        --primary: hsl(100, 100%, 50%);
-                        --shadow-primary: hsl(100, 100%, 40%);
-                        padding: 20px 40px;
-                        font-size: 24px;
-                        border: 2px solid var(--primary);
-                        background: transparent;
-                        color: var(--primary);
-                        text-transform: uppercase;
-                        letter-spacing: 2px;
-                        position: relative;
-                        cursor: pointer;
-                        transition: 0.2s;
-                        z-index: 1;
-                        text-decoration: none;
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 10px;
-                        position: relative;
-                    }
+    <!-- 3. Injection -->
+    <div class="vulnerability">
+      <h2>3. Injection</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'injection est une technique d'attaque qui consiste à insérer des commandes ou des requêtes malveillantes dans des champs de saisie. Ces commandes sont ensuite interprétées par le système, ce qui peut altérer son comportement.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        En partant du principe que tout système informatique attend des données dans un format précis, il est essentiel de valider et de filtrer ces entrées. Lorsque des données non vérifiées sont envoyées à un interpréteur (par exemple, une base de données), un attaquant peut exploiter cette vulnérabilité en insérant du code supplémentaire. Ce code peut être exécuté par le système, conduisant à la divulgation d'informations ou à la manipulation de données.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        L'injection peut permettre l'accès non autorisé à la base de données, la modification de données sensibles ou l'exécution de commandes malveillantes sur le serveur.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une requête SQL mal filtrée dans un formulaire de connexion, qui permet à un attaquant d'extraire la totalité de la base de données utilisateur.
+      </p>
+    </div>
 
-                    .cyber-button__icon {
-                        font-size: 1.2em;
-                        transition: transform 0.3s ease;
-                    }
+    <!-- 4. Insecure Design -->
+    <div class="vulnerability">
+      <h2>4. Conception non sécurisée (Insecure Design)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'insecure design se réfère à l'absence d'une approche intégrée de la sécurité lors de la phase de conception d'une application. Il s'agit de concevoir un système sans intégrer les meilleures pratiques et les principes de sécurité dès le départ.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Commencer par zéro signifie planifier, dès la conception, comment protéger les données et les processus critiques. Cela inclut la définition de politiques de sécurité, la segmentation du réseau, et la mise en place de contrôles d'accès appropriés. Une conception non sécurisée peut provenir d'une négligence des scénarios d'attaque, ce qui rend difficile l'ajout ultérieur de mesures de sécurité robustes sans une refonte complète de l'architecture.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une mauvaise conception peut introduire des vulnérabilités qui, une fois exploitées, compromettent l'ensemble du système, nécessitant souvent des corrections coûteuses et complexes.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une application qui ne prend pas en compte les principes de séparation des privilèges, laissant ainsi des voies d'accès directes aux ressources sensibles sans vérification adéquate.
+      </p>
+    </div>
 
-                    .cyber-button__tag {
-                        position: absolute;
-                        bottom: -25px;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        font-size: 14px;
-                        opacity: 0.7;
-                        text-transform: none;
-                        letter-spacing: 1px;
-                        white-space: nowrap;
-                    }
+    <!-- 5. Security Misconfiguration -->
+    <div class="vulnerability">
+      <h2>5. Mauvaise configuration de sécurité (Security Misconfiguration)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        La sécurité d'un système dépend en grande partie de sa configuration. La security misconfiguration survient lorsque des paramètres par défaut ou inappropriés sont laissés en place, exposant ainsi le système à des risques.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Dès la mise en place d'un serveur ou d'une application, il est crucial de revoir et d'ajuster les paramètres de sécurité : désactiver les fonctionnalités inutiles, appliquer les correctifs de sécurité, et configurer correctement les accès réseau. Une mauvaise configuration peut être le résultat d'un manque de suivi, d'une documentation inadéquate ou d'une négligence lors du déploiement.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une configuration inappropriée peut offrir aux attaquants un point d'entrée facile dans le système, facilitant des accès non autorisés ou l'exploitation d'autres vulnérabilités.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un serveur web déployé avec des paramètres par défaut, laissant des interfaces d'administration accessibles depuis l'extérieur.
+      </p>
+    </div>
 
-                    .cyber-button:hover {
-                        background: var(--primary);
-                        color: black;
-                        transform: scale(1.05);
-                        box-shadow: 0 0 20px var(--shadow-primary);
-                        padding-right: 50px;
-                    }
+    <!-- 6. Vulnerable and Outdated Components -->
+    <div class="vulnerability">
+      <h2>6. Composants vulnérables et obsolètes (Vulnerable and Outdated Components)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        Les applications modernes reposent sur de nombreux composants tiers, tels que des bibliothèques ou des frameworks. Leur mise à jour régulière est essentielle pour assurer la sécurité.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Chaque composant logiciel peut comporter des vulnérabilités. Lorsqu'un composant n'est plus maintenu ou que des correctifs ne sont pas appliqués, il devient une cible facile pour les attaquants. L'approche consiste à surveiller les versions utilisées et à appliquer les mises à jour de sécurité dès qu'elles sont disponibles, afin de limiter les risques.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        L'utilisation de composants obsolètes peut permettre à un attaquant d'exploiter des failles connues, compromettant ainsi la sécurité globale de l'application.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une application intégrant un framework de gestion des sessions dont la version présente une vulnérabilité documentée, facilitant l'usurpation d'identité.
+      </p>
+    </div>
 
-                    .cyber-button:hover .cyber-button__icon {
-                        transform: translateX(10px);
-                    }
+    <!-- 7. Identification and Authentication Failures -->
+    <div class="vulnerability">
+      <h2>7. Problèmes d'identification et d'authentification (Identification and Authentication Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'identification consiste à déterminer qui est l'utilisateur, tandis que l'authentification vérifie que l'utilisateur est bien celui qu'il prétend être. Ces mécanismes reposent sur la vérification d'informations (comme un mot de passe, un certificat, ou un jeton) pour garantir l'accès sécurisé aux ressources.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Partir des bases signifie comprendre que chaque utilisateur doit être reconnu par le système. Les méthodes d'authentification varient, allant des mots de passe aux systèmes multifacteurs, et doivent être conçues de manière à minimiser les risques de falsification ou de détournement d'identité. Un système mal conçu dans ce domaine permet à des acteurs malveillants de se faire passer pour un utilisateur légitime.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Des défaillances dans ces mécanismes exposent les systèmes à des attaques d'usurpation d'identité et à l'accès non autorisé à des données sensibles.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un système d'authentification qui ne valide pas correctement les sessions, permettant ainsi à un attaquant de récupérer des informations d'identification et d'accéder au compte d'un utilisateur.
+      </p>
+    </div>
 
-                    .cyber-button:hover .cyber-button__tag {
-                        animation: blink 1s infinite;
-                    }
+    <!-- 8. Software and Data Integrity Failures -->
+    <div class="vulnerability">
+      <h2>8. Défaillances d'intégrité logicielle et des données (Software and Data Integrity Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'intégrité des logiciels et des données assure qu'aucune modification non autorisée n'intervient dans le code ou les informations gérées par un système. C’est un mécanisme essentiel pour garantir que le contenu reste fiable et authentique.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        En partant de zéro, l'intégrité repose sur l'utilisation de signatures numériques, de contrôles de hachage ou d'autres techniques de vérification qui permettent de détecter toute altération. Ces mécanismes permettent de s'assurer que ni le code exécuté ni les données manipulées n'ont été modifiés par des tiers malveillants. Une absence de ces vérifications peut mener à l'exécution de code non vérifié ou à la corruption des données.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une atteinte à l'intégrité logicielle ou des données peut compromettre la fiabilité du système, entraîner des comportements inattendus ou permettre l'insertion de code malveillant.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une mise à jour logicielle non signée, où un attaquant a pu modifier le code avant son déploiement, introduisant ainsi une porte dérobée dans l'application.
+      </p>
+    </div>
 
-                    .cyber-button::after {
-                        content: '';
-                        position: absolute;
-                        bottom: -5px;
-                        left: 5%;
-                        width: 90%;
-                        height: 2px;
-                        background: var(--primary);
-                        transform: scaleX(0);
-                        transform-origin: right;
-                        transition: transform 0.3s ease;
-                    }
+    <!-- 9. Security Logging and Monitoring Failures -->
+    <div class="vulnerability">
+      <h2>9. Défaillances de la journalisation et de la surveillance (Security Logging and Monitoring Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        La journalisation et la surveillance consistent à enregistrer et analyser les activités d'un système afin de détecter et répondre à d'éventuels incidents de sécurité. Ces mécanismes permettent de constituer une traçabilité des actions.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Du point de départ, il est essentiel de comprendre que chaque action effectuée dans un système peut être consignée dans un journal d'événements. Cela inclut les connexions, les tentatives d'accès et les modifications effectuées. Ces données, une fois analysées, permettent d'identifier des comportements anormaux et de mettre en place des mesures correctives en temps utile. L'absence d'une telle surveillance peut retarder la détection d'une intrusion ou d'une attaque.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Sans une journalisation et une surveillance adéquates, il est difficile de comprendre l'origine d'un incident, ce qui complique la réponse et l'atténuation des impacts.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un système qui ne consigne pas les tentatives de connexion échouées, laissant ainsi les administrateurs sans information critique pour détecter une attaque par force brute.
+      </p>
+    </div>
 
-                    .cyber-button:hover::after {
-                        transform: scaleX(1);
-                        transform-origin: left;
-                    }
+    <!-- 10. Server-Side Request Forgery (SSRF) -->
+    <div class="vulnerability">
+      <h2>10. Falsification de requêtes côté serveur (Server-Side Request Forgery - SSRF)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        SSRF est une technique d'attaque où l'attaquant exploite la confiance du serveur pour qu'il réalise des requêtes HTTP vers des ressources internes ou externes. Autrement dit, le serveur est manipulé pour effectuer une action à la place de l'attaquant.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Dès le début, un serveur qui reçoit des requêtes est généralement configuré pour communiquer avec d'autres services ou API. Lorsqu'une entrée utilisateur n'est pas correctement validée, un attaquant peut modifier cette requête afin que le serveur contacte une ressource non prévue – par exemple, un service interne normalement protégé. Cela peut être réalisé en modifiant l'URL ou d'autres paramètres de la requête. Le risque réside dans le fait que le serveur, de confiance, peut accéder à des informations sensibles ou exécuter des actions non autorisées en son nom.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        La falsification de requêtes côté serveur peut exposer des ressources internes sensibles, permettre l'exfiltration de données ou même servir de point d'appui pour d'autres attaques.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un service de téléchargement d'images qui accepte une URL fournie par l'utilisateur sans validation adéquate, et qui, par conséquent, force le serveur à accéder à un système interne non exposé au public.
+      </p>
+    </div>
+  </section>
 
-                    @keyframes blink {
-                        0%, 100% { opacity: 0.7; }
-                        50% { opacity: 1; }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-        }
-    </script>
+  <footer>
+    <p>&copy; 2025 – Guide Professionnel des Vulnérabilités OWASP. Pour toute information complémentaire, veuillez consulter les ressources officielles d'OWASP.</p>
+  </footer>
 </body>
 </html>
 

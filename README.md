@@ -136,42 +136,66 @@ Pour créer un nouveau package, vous devez d'abord installer Flit.
 pip install flit
 ```
 
-Créez une nouvelle structure de répertoire pour votre package. Par exemple :
+Modifiez le contenu du code source. Par exemple, pour ajouter une nouvelle "APP" :
 
 ```
-mkdir mypackage
-cd mypackage
-touch pyproject.toml
+mkdir -p demokit/apps/APP-A{new number here}/public
+touch demokit/apps/APP-A0/Dockerfile demokit/apps/APP-A0/app-info.json demokit/apps/APP-A0/public/index.html
+# Copier tel quel le contenu d'un Dockerfile précédent dans le nouveau Dockerfile
+# Copier le contenu d'un app-info.json précédent comme modèle puis le modifier en conséquence
+# Concevez de toute pièce un fichier public/index.html correspondant aux attentes
 ```
 
-Editez le fichier pyproject.toml pour configurer votre package. Voici un exemple de contenu basique :
+Editez le fichier `demokit/__init__.py` pour incrémenter le numéro de version de votre package. Voici un exemple de contenu basique :
+
+```
+vim demokit/__init__.py
+```
+
+Modifiez le fichier pyproject.toml. Ce fichier doit contenir les informations nécessaires, par exemple :
 
 ```
 [build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [tool.flit.metadata]
-module = "mypackage"
+name = "nom_de_votre_package"
 author = "Votre Nom"
 author-email = "votre.email@example.com"
-home-page = "https://github.com/yourusername/mypackage"
-version = "0.1.0"
-description-file = "README.md"
-requires-python = ">=3.6"
-
-[[tool.flit.metadata.requires-extra]]
-docs = ["sphinx"]
+description = "Description courte de votre package"
 ```
-
-Créez un fichier `mypackage/__init__.py` et ajoutez le code de votre package.
 
 Vous pouvez maintenant construire et installer localement votre package :
 
 ```
 flit build
+```
+
+Cela va générer un fichier .tar.gz et un .whl dans le dossier dist/.
+
+Pour tester le package sans le publier :
+*Les fichiers du package sont copiés dans l'environnement, créant une version "figée" du package. Les modifications ultérieures apportées au code source dans le répertoire de développement ne seront pas reflétées dans l'installation.*
+
+```
+flit install
+```
+
+Ou pour une installation en mode développement :
+*L'option --symlink lors de l'installation avec flit permet d'installer le package en mode développement. Au lieu de copier les fichiers dans votre environnement Python, flit crée un lien symbolique (symlink) qui pointe vers le répertoire source de votre package. Cela signifie que toutes les modifications apportées au code source seront immédiatement prises en compte, sans avoir à réinstaller le package à chaque changement. C'est particulièrement utile pour tester et développer votre package de manière itérative.*
+
+```
 flit install --symlink
 ```
+
+Dans un script Python ou un interpréteur interactif, essayez :
+
+```
+import mon_projet
+print(mon_projet.__version__)
+```
+
+Si tout fonctionne, votre package est prêt !
 
 Pour publier votre package sur PyPI, vous devez d'abord configurer les informations d'identification. Créez un fichier .pypirc dans votre répertoire personnel avec le contenu suivant :
 

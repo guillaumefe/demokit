@@ -1,0 +1,448 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWASP Top Ten 2021 - Vulnérabilités (Version Apprenant)</title>
+    <style>
+        /* Styles identiques à la version originale */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .warning {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .card {
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .card h2 {
+            color: #007BFF;
+            font-size: 20px;
+        }
+        .card p {
+            color: #555;
+        }
+        .code-block {
+            background-color: #e0f7fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        button {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="warning">
+            <strong>Avertissement légal :</strong> Cette page présente des vulnérabilités à des fins éducatives seulement. Toute utilisation non autorisée est illégale et peut entraîner des poursuites pénales.
+        </div>
+        <h1>OWASP Top Ten 2021 - Vulnérabilités</h1>
+
+        <!-- A01:2021 - Broken Access Control -->
+        <div class="card">
+            <h2>1. Broken Access Control (A01:2021)</h2>
+            <p>Permet à des utilisateurs non autorisés d'accéder ou de modifier des ressources sensibles.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                if ($_GET['isAdmin'] == 'true') {<br>
+                    echo "Bienvenue, administrateur";<br>
+                }<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                session_start();<br>
+                if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {<br>
+                    header("Location: unauthorized.php");<br>
+                    exit();<br>
+                }<br>
+                echo "Bienvenue, administrateur";<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A02:2021 - Cryptographic Failures -->
+        <div class="card">
+            <h2>2. Cryptographic Failures (A02:2021)</h2>
+            <p>Problèmes liés à une mauvaise gestion des données sensibles.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $token = "123456"; // Token non sécurisé<br>
+                echo "Votre token : $token";<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $token = bin2hex(random_bytes(16));<br>
+                echo "Votre token : $token";<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A03:2021 - Injection -->
+        <div class="card">
+            <h2>3. Injection (A03:2021)</h2>
+            <p>Exploitation de failles dans la gestion des entrées utilisateur pour exécuter des commandes non prévues.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $id = $_GET['id'];<br>
+                $query = "DELETE FROM users WHERE id = $id";<br>
+                mysqli_query($conn, $query);<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $id = intval($_GET['id']);<br>
+                $query = "DELETE FROM users WHERE id = ?";<br>
+                $stmt = $conn->prepare($query);<br>
+                $stmt->bind_param("i", $id);<br>
+                $stmt->execute();<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A04:2021 - Insecure Design -->
+        <div class="card">
+            <h2>4. Insecure Design (A04:2021)</h2>
+            <p>Absence de considération pour les menaces potentielles dès la phase de conception.</p>
+            <p><strong>Illustration du processus :</strong></p>
+            <canvas id="designGraph" width="600" height="400" style="background-color: #f9f9f9; border: 1px solid #ccc; display: block; margin: 0 auto;"></canvas>
+            <p style="text-align: center;"><em>Le processus vulnérable néglige les étapes critiques comme l'analyse des menaces et les tests de sécurité.</em></p>
+        </div>
+
+        <!-- Script pour le graphique -->
+        <script>
+            const canvas = document.getElementById('designGraph');
+            const ctx = canvas.getContext('2d');
+
+            // Dimensions et paramètres
+            const startX = 50;
+            const startY = 50;
+            const stepX = 150;
+            const stepY = 50;
+
+            // Processus vulnérable
+            ctx.fillStyle = '#FF0000';
+            ctx.font = "14px Arial";
+            ctx.fillText("Processus vulnérable", startX, startY - 10);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX + stepX, startY + stepY);
+            ctx.lineTo(startX + 2 * stepX, startY + 2 * stepY);
+            ctx.lineTo(startX + 3 * stepX, startY + 3 * stepY);
+            ctx.strokeStyle = '#FF0000';
+            ctx.stroke();
+
+            ctx.fillText("Planification", startX + stepX - 40, startY + stepY - 10);
+            ctx.fillText("Développement", startX + 2 * stepX - 40, startY + 2 * stepY - 10);
+            ctx.fillText("Déploiement", startX + 3 * stepX - 40, startY + 3 * stepY - 10);
+
+            // Processus sécurisé
+            ctx.fillStyle = '#007BFF';
+            ctx.fillText("Processus sécurisé", startX, startY + 5 * stepY - 10);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY + 5 * stepY);
+            ctx.lineTo(startX + stepX, startY + 4 * stepY);
+            ctx.lineTo(startX + 2 * stepX, startY + 3 * stepY);
+            ctx.lineTo(startX + 3 * stepX, startY + 2 * stepY);
+            ctx.lineTo(startX + 4 * stepX, startY + stepY);
+            ctx.strokeStyle = '#007BFF';
+            ctx.stroke();
+
+            ctx.fillText("Analyse des menaces", startX + stepX - 40, startY + 4 * stepY - 10);
+            ctx.fillText("Planification", startX + 2 * stepX - 40, startY + 3 * stepY - 10);
+            ctx.fillText("Développement sécurisé", startX + 3 * stepX - 40, startY + 2 * stepY - 10);
+            ctx.fillText("Tests de sécurité", startX + 4 * stepX - 40, startY + stepY - 10);
+
+            // Légende
+            ctx.fillStyle = '#000';
+            ctx.fillText("Rouge : Processus vulnérable", startX, startY + 8 * stepY);
+            ctx.fillText("Bleu : Processus sécurisé", startX, startY + 8 * stepY + 20);
+        </script>
+
+        <!-- A05:2021 - Security Misconfiguration -->
+        <div class="card">
+            <h2>5. Security Misconfiguration (A05:2021)</h2>
+            <p>Erreurs dans les configurations de sécurité, comme des paramètres par défaut non sécurisés.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                ini_set('display_errors', 1);<br>
+                error_reporting(E_ALL);<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                ini_set('display_errors', 0);<br>
+                error_reporting(0);<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A06:2021 - Vulnerable and Outdated Components -->
+        <div class="card">
+            <h2>6. Vulnerable and Outdated Components (A06:2021)</h2>
+            <p>Utilisation de composants obsolètes ou vulnérables exposant l'application à des attaques.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;dependency&gt;<br>
+                    &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;<br>
+                    &lt;artifactId&gt;log4j-core&lt;/artifactId&gt;<br>
+                    &lt;version&gt;2.13.3&lt;/version&gt; &lt;!-- Version vulnérable --&gt;<br>
+                &lt;/dependency&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;dependency&gt;<br>
+                    &lt;groupId&gt;org.apache.logging.log4j&lt;/groupId&gt;<br>
+                    &lt;artifactId&gt;log4j-core&lt;/artifactId&gt;<br>
+                    &lt;version&gt;2.20.0&lt;/version&gt; &lt;!-- Version sécurisée --&gt;<br>
+                &lt;/dependency&gt;
+            </div>
+        </div>
+
+        <!-- A07:2021 - Identification and Authentication Failures -->
+        <div class="card">
+            <h2>7. Identification and Authentication Failures (A07:2021)</h2>
+            <p>Failles dans les mécanismes d'authentification.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                if ($_POST['password'] == 'password123') {<br>
+                    echo "Authentifié !";<br>
+                }<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                if (password_verify($_POST['password'], $hashedPassword)) {<br>
+                    echo "Authentifié !";<br>
+                }<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A08:2021 - Software and Data Integrity Failures -->
+        <div class="card">
+            <h2>8. Software and Data Integrity Failures (A08:2021)</h2>
+            <p>Manque de vérification des mises à jour logicielles ou des données critiques.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $file = $_GET['file'];<br>
+                include($file); // Permet l'inclusion de fichiers non sécurisés<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $allowed_files = ['header.php', 'footer.php'];<br>
+                $file = $_GET['file'];<br>
+                if (in_array($file, $allowed_files)) {<br>
+                    include($file);<br>
+                } else {<br>
+                    echo "Fichier non autorisé !";<br>
+                }<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A09:2021 - Security Logging and Monitoring Failures -->
+        <div class="card">
+            <h2>9. Security Logging and Monitoring Failures (A09:2021)</h2>
+            <p>Absence de journalisation ou de surveillance pour détecter les activités malveillantes.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                // Aucune journalisation en cas d'échec de connexion<br>
+                if ($login_failed) {<br>
+                    echo "Échec de connexion";<br>
+                }<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                if ($login_failed) {<br>
+                    error_log("Tentative de connexion échouée pour l'utilisateur : $username", 0);<br>
+                    echo "Échec de connexion";<br>
+                }<br>
+                ?&gt;
+            </div>
+        </div>
+
+        <!-- A10:2021 - Server-Side Request Forgery (SSRF) -->
+        <div class="card">
+            <h2>10. Server-Side Request Forgery (SSRF) (A10:2021)</h2>
+            <p>Permet à un attaquant de forcer un serveur à effectuer des requêtes non prévues.</p>
+            <p><strong>Exemple de code vulnérable :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $url = $_GET['url'];<br>
+                $response = file_get_contents($url); // Requête non vérifiée<br>
+                echo $response;<br>
+                ?&gt;
+            </div>
+            <p><strong>Code corrigé :</strong></p>
+            <div class="code-block">
+                &lt;?php<br>
+                $url = $_GET['url'];<br>
+                $allowed_domains = ['example.com', 'mysite.com'];<br>
+                $parsed_url = parse_url($url);<br>
+                if (in_array($parsed_url['host'], $allowed_domains)) {<br>
+                    $response = file_get_contents($url);<br>
+                    echo $response;<br>
+                } else {<br>
+                    echo "Domaine non autorisé !";<br>
+                }<br>
+                ?&gt;
+            </div>
+        </div>
+    </div>
+
+    <!-- Script pour le bouton interactif -->
+    <script>
+        function startgame() {
+            let asnw = prompt("URL donné par le formateur", "http://");
+            if(asnw) {
+                document.body.innerHTML = `
+                    <div class="hacker-container">
+                        <div class="grid-background"></div>
+                        <div class="floating-numbers"></div>
+                        <a href="${asnw}" class="cyber-button">
+                            <span class="cyber-button__glitch"></span>
+                            <span class="cyber-button__icon">➜</span>
+                            <span class="cyber-button__text">Now you are free to hack</span>
+                            <span class="cyber-button__tag">[Click to proceed]</span>
+                        </a>
+                    </div>
+                `;
+
+                const style = document.createElement('style');
+                style.textContent = `
+                    /* Styles pour l'animation du bouton */
+                    .cyber-button {
+                        --primary: hsl(100, 100%, 50%);
+                        --shadow-primary: hsl(100, 100%, 40%);
+                        padding: 20px 40px;
+                        font-size: 24px;
+                        border: 2px solid var(--primary);
+                        background: transparent;
+                        color: var(--primary);
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        position: relative;
+                        cursor: pointer;
+                        transition: 0.2s;
+                        z-index: 1;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 10px;
+                        position: relative;
+                    }
+
+                    .cyber-button__icon {
+                        font-size: 1.2em;
+                        transition: transform 0.3s ease;
+                    }
+
+                    .cyber-button__tag {
+                        position: absolute;
+                        bottom: -25px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        font-size: 14px;
+                        opacity: 0.7;
+                        text-transform: none;
+                        letter-spacing: 1px;
+                        white-space: nowrap;
+                    }
+
+                    .cyber-button:hover {
+                        background: var(--primary);
+                        color: black;
+                        transform: scale(1.05);
+                        box-shadow: 0 0 20px var(--shadow-primary);
+                        padding-right: 50px;
+                    }
+
+                    .cyber-button:hover .cyber-button__icon {
+                        transform: translateX(10px);
+                    }
+
+                    .cyber-button:hover .cyber-button__tag {
+                        animation: blink 1s infinite;
+                    }
+
+                    .cyber-button::after {
+                        content: '';
+                        position: absolute;
+                        bottom: -5px;
+                        left: 5%;
+                        width: 90%;
+                        height: 2px;
+                        background: var(--primary);
+                        transform: scaleX(0);
+                        transform-origin: right;
+                        transition: transform 0.3s ease;
+                    }
+
+                    .cyber-button:hover::after {
+                        transform: scaleX(1);
+                        transform-origin: left;
+                    }
+
+                    @keyframes blink {
+                        0%, 100% { opacity: 0.7; }
+                        50% { opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    </script>
+</body>
+</html>
+
