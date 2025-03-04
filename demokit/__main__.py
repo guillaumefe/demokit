@@ -225,7 +225,7 @@ class AppManager:
                     return port
         return None
 
-    def generate_main_page(self, catalog_url: str):
+    def generate_main_page(self, catalog_port: int):
         with open(self.splash_file, "r") as f:
             splash_content = f.read()
 
@@ -264,7 +264,7 @@ class AppManager:
 </head>
 <body>
 {splash_content}
-<button onclick="location.href='{catalog_url}'">Parcourir les apps</button>
+<button onclick="location.href='http://' + window.location.hostname + ':{catalog_port}/catalog.html'">Parcourir les apps</button>
 </body>
 </html>"""
 
@@ -322,12 +322,16 @@ class AppManager:
         apps_data = []
         for app in sorted(apps, key=lambda x: x['title']):
             app_data = app.copy()
-            app_data['url'] = f"http://localhost:{app_data['port']}"
+            app_data['url'] = f"http://__HOST__:{app_data['port']}"
             app_data['port'] = str(app_data['port'])
             apps_data.append(app_data)
 
         apps_json = json.dumps(apps_data)
         catalog_content = template.replace('{{VULNERABILITIES_DATA}}', apps_json)
+
+        appsData.forEach(app => {
+            app.url = app.url.replace("__HOST__", window.location.hostname);
+        });
 
         with open("catalog.html", "w") as f:
             f.write(catalog_content)
@@ -423,7 +427,7 @@ def main(wait_docker):
 
         apps = app_manager.deploy_apps()
         app_manager.generate_catalog(apps)
-        app_manager.generate_main_page(f"http://localhost:{catalog_port}/catalog.html")
+        app_manager.generate_main_page(catalog_port)
 
         main_server = threading.Thread(
             target=lambda: WebServer(main_port).start(),
