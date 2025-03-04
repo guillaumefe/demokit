@@ -329,10 +329,6 @@ class AppManager:
         apps_json = json.dumps(apps_data)
         catalog_content = template.replace('{{VULNERABILITIES_DATA}}', apps_json)
 
-        appsData.forEach(app => {
-            app.url = app.url.replace("__HOST__", window.location.hostname);
-        });
-
         with open("catalog.html", "w") as f:
             f.write(catalog_content)
 

@@ -87,6 +87,10 @@
 
         const vulnerabilities = {{VULNERABILITIES_DATA}};
 
+	vulnerabilities.forEach(app => {
+    		app.url = app.url.replace('__HOST__', window.location.hostname);
+	});
+
         window.onload = function() {
             document.getElementById('page-title').textContent = pageTitle;
             document.querySelector('h1').textContent = sectionTitle;
@@ -121,7 +125,7 @@
                     appDiv.innerHTML = `
                         <h2>${app.title}</h2>
                         <p>${app.description}</p>
-                        <a href="http://${window.location.hostname}:${app.port}" id="demo-link-${app.id}">Demo</a>
+			<a href="${app.url}" id="demo-link-${app.id}">Demo</a>
                         <button onclick="toggleDone('${app.id}')">Mark</button>
                     `;
 
