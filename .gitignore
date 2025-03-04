@@ -30,3 +30,9 @@ env/
 *.out
 *.snm
 *.toc
+
+# Ignorer le fichier catalog.html à la racine
+catalog.html
+
+# Ignorer tout le dossier dist (où se trouvent wheel et tar.gz)
+dist/
