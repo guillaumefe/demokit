@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>OWASP A05: Mauvaises Configurations de Sécurité</title>
+    <style>
+        /* Styles généraux similaires au code fourni */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+            line-height: 1.6;
+        }
+        .scenario-container, .hint-container, .config-panel, .feedback-message {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .config-panel {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #33ff33;
+        }
+        .hint-container {
+            background-color: #2c5282;
+            color: white;
+        }
+        .feedback-message {
+            font-size: 14px;
+        }
+        .message.success { background: #c6f6d5; color: #22543d; }
+        .message.error { background: #fed7d7; color: #9b2c2c; }
+        button {
+            background-color: #4a5568;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 OWASP A05: Défis de Configurations Sécuritaires</h1>
+    <p>Identifiez et corrigez les erreurs de configuration de sécurité dans un environnement fictif.</p>
+
+    <div id="mainContent"></div>
+
+    <script>
+        // Liste des scénarios
+        const scenarios = [
+            {
+                id: "1",
+                title: "Exposition de Port Inutile",
+                description: "Le serveur expose des ports inutilisés. Identifiez et désactivez ces ports pour limiter les vecteurs d'attaque.",
+                config: {
+                    ports: [22, 23, 80, 8080],
+                    unnecessaryPorts: [23, 8080]
+                },
+                solution: [23, 8080]
+            },
+            {
+                id: "2",
+                title: "Permissions Cloud Incorrectes",
+                description: "Un service cloud a des permissions excessives, permettant un accès public non intentionnel. Corrigez ces permissions.",
+                config: {
+                    services: {
+                        database: "public",
+                        storage: "private",
+                        monitoring: "public"
+                    },
+                    unnecessaryPublic: ["database", "monitoring"]
+                },
+                solution: { database: "private", monitoring: "private" }
+            }
+        ];
+
+        let currentScenarioIndex = 0;
+
+        function startGame() {
+            loadScenario(currentScenarioIndex);
+        }
+
+        function loadScenario(index) {
+            const scenario = scenarios[index];
+            let content = `
+                <div class="scenario-container">
+                    <h2>${scenario.title}</h2>
+                    <p>${scenario.description}</p>
+                    <div class="config-panel" id="config-panel">
+                        ${formatConfig(scenario.config)}
+                    </div>
+                    <button onclick="submitSolution()">Soumettre la Solution</button>
+                </div>
+                <div class="hint-container">
+                    <p>💡 Indice : Identifiez les éléments inutiles ou mal configurés en analysant la configuration ci-dessus.</p>
+                </div>
+                <div id="feedback"></div>
+            `;
+            document.getElementById("mainContent").innerHTML = content;
+        }
+
+        function formatConfig(config) {
+            if (Array.isArray(config.ports)) {
+                return `Ports ouverts : ${config.ports.join(", ")}`;
+            }
+            if (typeof config.services === "object") {
+                return Object.entries(config.services)
+                    .map(([service, visibility]) => `${service}: ${visibility}`)
+                    .join("<br>");
+            }
+            return JSON.stringify(config, null, 2);
+        }
+
+        function submitSolution() {
+            const scenario = scenarios[currentScenarioIndex];
+            const userSolution = prompt("Entrez votre solution (exemple: '22,80' ou 'database:private')");
+
+            if (validateSolution(scenario.solution, userSolution)) {
+                displayFeedback("success", "✅ Solution correcte ! Vous avez corrigé les mauvaises configurations.");
+                setTimeout(nextScenario, 2000);
+            } else {
+                displayFeedback("error", "❌ Solution incorrecte. Réessayez.");
+            }
+        }
+
+        function validateSolution(solution, userSolution) {
+            if (Array.isArray(solution)) {
+                const userPorts = userSolution.split(",").map(Number);
+                return JSON.stringify(userPorts.sort()) === JSON.stringify(solution.sort());
+            }
+            if (typeof solution === "object") {
+                const userConfig = Object.fromEntries(userSolution.split(",").map(pair => pair.split(":")));
+                return JSON.stringify(userConfig) === JSON.stringify(solution);
+            }
+            return false;
+        }
+
+        function displayFeedback(type, message) {
+            const feedback = document.getElementById("feedback");
+            feedback.innerHTML = `<div class="feedback-message message ${type}">${message}</div>`;
+        }
+
+        function nextScenario() {
+            currentScenarioIndex++;
+            if (currentScenarioIndex < scenarios.length) {
+                loadScenario(currentScenarioIndex);
+            } else {
+                document.getElementById("mainContent").innerHTML = `
+                    <h2>Félicitations ! 🎉</h2>
+                    <p>Vous avez réussi tous les scénarios !</p>
+                `;
+            }
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
+

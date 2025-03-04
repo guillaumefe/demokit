@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker en Charge</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #1a1a1a; 
+            color: #e0e0e0; 
+            margin: 0; 
+            padding: 0; 
+        }
+        #game { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+        #output { 
+            width: 80%; 
+            height: 60%; 
+            background-color: #333; 
+            color: #fff; 
+            padding: 20px; 
+            overflow-y: auto; 
+            border-radius: 5px; 
+            margin-bottom: 20px; 
+        }
+        #input { 
+            width: 80%; 
+            padding: 10px; 
+            font-size: 16px; 
+        }
+        #lawModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            color: #fff;
+            padding: 20px;
+        }
+        #lawContent {
+            background-color: #222;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #555;
+            width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            border-radius: 10px;
+            color: #fff;
+        }
+        #closeLaw {
+            color: #fff;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #countdown {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4c4c;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="output"></div>
+        <input type="text" id="input" placeholder="Entrez une commande...">
+    </div>
+
+    <div id="lawModal">
+        <div id="lawContent">
+            <span id="closeLaw">&times;</span>
+            <h2>Articles du Code Pénal</h2>
+            <p id="lawText">
+                <strong>Article 323-1</strong><br>
+                Constitue une infraction pénale le fait d'accéder ou de se maintenir, frauduleusement, dans tout ou partie d'un système de traitement automatisé de données.<br>
+                <em>Peine :</em> Jusqu'à 2 ans d'emprisonnement et 60 000 euros d'amende.<br><br>
+                
+                <strong>Article 323-3</strong><br>
+                Le fait d'introduire frauduleusement des données, des informations ou des commandes dans un système de traitement automatisé de données est puni de cinq ans d'emprisonnement et de 150 000 euros d'amende.<br>
+                <em>Peine :</em> Jusqu'à 5 ans d'emprisonnement et 150 000 euros d'amende.<br><br>
+                
+                <strong>Article 226-16</strong><br>
+                Est puni d'un an d'emprisonnement et de 45 000 euros d'amende le fait, par quelque moyen que ce soit, de porter atteinte à l'intimité de la vie privée d'autrui en captant, enregistrant ou transmettant, sans le consentement de leur auteur, des paroles prononcées à titre privé ou confidentiel.<br>
+                <em>Peine :</em> Jusqu'à 1 an d'emprisonnement et 45 000 euros d'amende.<br><br>
+                
+                Pour plus de détails, consultez <a href="https://www.legifrance.gouv.fr/codes/id/LEGIARTI000006417326/" target="_blank" style="color: #00aced;">Article 323-1</a>, 
+                <a href="https://www.legifrance.gouv.fr/codes/id/LEGIARTI000006417328/" target="_blank" style="color: #00aced;">Article 323-3</a>, et 
+                <a href="https://www.legifrance.gouv.fr/codes/id/LEGIARTI000006417354/" target="_blank" style="color: #00aced;">Article 226-16</a>.
+            </p>
+        </div>
+    </div>
+
+    <div id="countdown">Alarme déclenchée !</div>
+
+    <script>
+        const output = document.getElementById('output');
+        const input = document.getElementById('input');
+        const lawModal = document.getElementById('lawModal');
+        const closeLaw = document.getElementById('closeLaw');
+        const countdown = document.getElementById('countdown');
+
+        let countdownTimer = null;
+
+        const gameState = {
+            score: 0,
+            currentLocation: 'Lobby',
+            alarmActive: false,
+            countdown: 0,
+            scanResults: [],
+            helpMode: false,
+            selectedNPC: '',
+            arrested: false,
+            clueFound: false
+        };
+
+        const defaultNPC = 'Kevin Mitnick';
+
+        const locations = {
+            'Lobby': { 
+                description: 'Vous êtes dans le lobby principal. Des portes mènent vers différents secteurs.<br><br>' +
+                            'Vous pouvez taper la commande <span style="font-family: \'Courier New\'; color: red;">\'look\'</span> pour regarder autour de vous. <br>' +
+                            'Et les commandes' +
+                            '<span style="font-family: \'Courier New\'; color: red;">\'n\'</span>, ' +
+                            '<span style="font-family: \'Courier New\'; color: red;">\'e\'</span>, ' +
+                            '<span style="font-family: \'Courier New\'; color: red;">\'s\'</span> ou ' +
+                            '<span style="font-family: \'Courier New\'; color: red;">\'o\'</span> ' +
+                            'pour vous déplacer au Nord, à l\'Est, au Sud ou à l\'Ouest.',
+                exits: { 
+                    'n': { to: 'Office', locked: false }, 
+                    'e': { to: 'Server Room', locked: false }, 
+                    's': { to: 'Street', locked: false }, 
+                    'o': { to: 'Control Room', locked: false } 
+                }
+            },
+            'Office': { 
+                description: 'Vous êtes dans le bureau administratif. Des dossiers importants sont ici.', 
+                exits: { 
+                    's': { to: 'Lobby', locked: false },
+                    'e': { to: 'Social Engineering Lab', locked: false },
+                    'w': { to: 'Penetration Testing Room', locked: false }
+                }
+            },
+            'Server Room': { 
+                description: 'Salle des serveurs. Les machines bourdonnent.', 
+                exits: { 
+                    'o': { to: 'Lobby', locked: false },
+                    'e': { to: 'Malware Development Lab', locked: false }
+                }
+            },
+            'Control Room': { 
+                description: 'Salle de contrôle. Des écrans montrent diverses données de sécurité.', 
+                exits: { 
+                    'e': { to: 'Lobby', locked: false }, 
+                    'n': { to: 'Reinforced Gate', locked: true },
+                    'w': { to: 'Reverse Engineering Suite', locked: false },
+                    's': { to: 'Cloud Security Center', locked: false }
+                }
+            },
+            'Reinforced Gate': { 
+                description: 'Portail renforcé avec un cadenas sophistiqué.', 
+                exits: { 
+                    's': { to: 'Control Room', locked: false }, 
+                    'e': { to: 'Secured Door', locked: true } 
+                }
+            },
+            'Secured Door': { 
+                description: 'Porte sécurisée avec un système de badge électronique.', 
+                exits: { 
+                    'o': { to: 'Reinforced Gate', locked: false }, 
+                    'n': { to: 'Server Door', locked: true } 
+                }
+            },
+            'Server Door': { 
+                description: 'Porte du serveur avec un système de clé avancé.', 
+                exits: { 
+                    's': { to: 'Secured Door', locked: false }, 
+                    'e': { to: 'Datacenter', locked: true } 
+                }
+            },
+            'Datacenter': { 
+                description: 'Datacenter ultra-sécurisé. Les serveurs les plus importants sont ici.', 
+                exits: { 
+                    'o': { to: 'Server Door', locked: false } 
+                }
+            },
+            'Street': { 
+                description: 'Vous êtes dans la rue. L\'alarme retentit en permanence.', 
+                exits: { 
+                    'n': { to: 'Lobby', locked: false } 
+                }
+            },
+            // Nouveaux lieux
+            'Social Engineering Lab': {
+                description: 'Laboratoire de Social Engineering. Des outils et ressources pour manipuler les humains.', 
+                exits: { 
+                    'w': { to: 'Office', locked: false } 
+                }
+            },
+            'Malware Development Lab': {
+                description: 'Laboratoire de Développement de Malware. Des équipements pour créer des logiciels malveillants.', 
+                exits: { 
+                    'w': { to: 'Server Room', locked: false } 
+                }
+            },
+            'Reverse Engineering Suite': {
+                description: 'Suite de Reverse Engineering. Des postes de travail pour analyser et décoder des logiciels.', 
+                exits: { 
+                    'e': { to: 'Control Room', locked: false } 
+                }
+            },
+            'Cloud Security Center': {
+                description: 'Centre de Sécurité Cloud. Des outils pour sécuriser les infrastructures cloud.', 
+                exits: { 
+                    'n': { to: 'Control Room', locked: false } 
+                }
+            },
+            'Penetration Testing Room': {
+                description: 'Salle de Penetration Testing. Des simulateurs d\'attaques pour tester les défenses.', 
+                exits: { 
+                    'e': { to: 'Office', locked: false } 
+                }
+            },
+            'Free Software Lab': {
+                description: 'Laboratoire du Logiciel Libre. Un espace dédié au développement et à la promotion des logiciels libres.', 
+                exits: { 
+                    'w': { to: 'Office', locked: false } 
+                }
+            }
+        };
+
+        const famousHackers = {
+            'Lobby': 'Kevin Mitnick',
+            'Office': 'Adrian Lamo',
+            'Server Room': 'Gary McKinnon',
+            'Control Room': 'Albert Gonzalez',
+            'Street': 'Anonymous',
+            'Datacenter': 'Linus Torvalds',
+            // Nouveaux NPCs
+            'Social Engineering Lab': 'Julien Assengce',
+            'Malware Development Lab': 'Baptiste Robert',
+            'Reverse Engineering Suite': 'MiCode',
+            'Cloud Security Center': 'Alice Dupont',
+            'Penetration Testing Room': 'Maxime Legrand',
+            'Free Software Lab': 'Richard Stallman'
+        };
+
+        const npcHelp = {
+            'Kevin Mitnick': {
+                description: "Je suis Kevin Mitnick, maître du piratage de réseaux. Que veux-tu savoir ?",
+                questions: [
+                    "1. Comment fonctionne nmap ?",
+                    "2. Que faire après nmap ?"
+                ],
+                answers: {
+                    1: "nmap est un scanner réseau. Il te permet de découvrir des machines et services en scannant les ports ouverts. Tape `nmap` pour commencer.",
+                    2: "Après avoir scanné le réseau, analyse les services ouverts. Si tu trouves SSH (22), essaie un bruteforce. Pour HTTP (80), pense à des vulnérabilités web."
+                }
+            },
+            'Adrian Lamo': {
+                description: "Je suis Adrian Lamo, expert en sécurité informatique. Que veux-tu savoir ?",
+                questions: [
+                    "1. Comment sécuriser un système ?",
+                    "2. Quelles sont les meilleures pratiques de sécurité ?"
+                ],
+                answers: {
+                    1: "Pour sécuriser un système, commence par mettre à jour tous les logiciels, utiliser des pare-feux robustes et restreindre les accès non autorisés.",
+                    2: "Les meilleures pratiques incluent l'utilisation de mots de passe forts, la mise en place de l'authentification à deux facteurs, et la formation régulière des utilisateurs."
+                }
+            },
+            'Gary McKinnon': {
+                description: "Je suis Gary McKinnon, spécialiste des intrusions systèmes. Que veux-tu savoir ?",
+                questions: [
+                    "1. Quels sont les risques des attaques DDoS ?",
+                    "2. Comment prévenir les intrusions systèmes ?"
+                ],
+                answers: {
+                    1: "Les attaques DDoS peuvent paralyser des services en ligne en surchargeant les serveurs avec un trafic massif.",
+                    2: "Pour prévenir les intrusions, utilisez des systèmes de détection d'intrusion, segmentez votre réseau, et effectuez des audits de sécurité réguliers."
+                }
+            },
+            'Albert Gonzalez': {
+                description: "Je suis Albert Gonzalez, expert en sécurité des données. Que veux-tu savoir ?",
+                questions: [
+                    "1. Comment protéger les données sensibles ?",
+                    "2. Quelles sont les dernières tendances en cybersécurité ?"
+                ],
+                answers: {
+                    1: "Pour protéger les données sensibles, utilisez le chiffrement, contrôlez les accès, et effectuez des sauvegardes régulières.",
+                    2: "Les dernières tendances incluent l'utilisation de l'intelligence artificielle pour la détection des menaces et l'adoption du Zero Trust Security."
+                }
+            },
+            'Anonymous': {
+                description: "Nous sommes Anonymous, un collectif de hackers. Que veux-tu savoir ?",
+                questions: [
+                    "1. Quelles sont nos motivations ?",
+                    "2. Comment collaborer avec nous ?"
+                ],
+                answers: {
+                    1: "Nos motivations varient, mais nous nous battons généralement pour la liberté d'information et contre les injustices.",
+                    2: "Collaborer avec nous nécessite une compréhension claire de nos objectifs et une adhésion à nos principes éthiques."
+                }
+            },
+            'Linus Torvalds': {
+                description: "Je suis Linus Torvalds, créateur de Linux. Que veux-tu savoir ?",
+                questions: [
+                    "1. Comment contribuer au projet Linux ?",
+                    "2. Quels sont les avantages d'utiliser Linux ?"
+                ],
+                answers: {
+                    1: "Pour contribuer à Linux, commence par choisir un aspect qui t'intéresse, étudier le code existant, et soumettre des contributions via les canaux officiels.",
+                    2: "Linux offre une grande flexibilité, une sécurité renforcée, et une vaste communauté de développeurs qui contribuent constamment à son amélioration."
+                }
+            },
+            // Nouveaux NPCs
+            'Julien Assengce': {
+                description: "Je suis Julien Assengce, expert en Social Engineering. Comment puis-je t'aider ?",
+                questions: [
+                    "1. Qu'est-ce que le Social Engineering ?",
+                    "2. Comment se protéger contre le Social Engineering ?"
+                ],
+                answers: {
+                    1: "Le Social Engineering est l'art de manipuler les individus pour obtenir des informations confidentielles. Cela peut inclure des techniques comme le phishing ou le pretexting.",
+                    2: "Pour se protéger, il est essentiel de sensibiliser les employés, de vérifier les identités avant de divulguer des informations sensibles, et de mettre en place des protocoles de sécurité stricts."
+                }
+            },
+            'Baptiste Robert': {
+                description: "Je suis Baptiste Robert, spécialiste en Développement de Malware. Que veux-tu savoir ?",
+                questions: [
+                    "1. Comment les malwares se propagent-ils ?",
+                    "2. Quelles sont les méthodes courantes de création de Malware ?"
+                ],
+                answers: {
+                    1: "Les malwares se propagent via des emails de phishing, des téléchargements infectés, des vulnérabilités de logiciels, et des réseaux compromis.",
+                    2: "Les méthodes incluent l'utilisation de code malveillant, l'exploitation de vulnérabilités, et la dissimulation via des techniques de chiffrement ou de polymorphisme."
+                }
+            },
+            'MiCode': {
+                description: "Je suis MiCode, analyste en Reverse Engineering. Que veux-tu savoir ?",
+                questions: [
+                    "1. Qu'est-ce que le Reverse Engineering ?",
+                    "2. Pourquoi le Reverse Engineering est-il important en sécurité ?"
+                ],
+                answers: {
+                    1: "Le Reverse Engineering consiste à décomposer un logiciel pour comprendre son fonctionnement interne, souvent utilisé pour analyser des malwares.",
+                    2: "Il permet de découvrir des vulnérabilités, de comprendre les mécanismes des attaques, et de développer des défenses efficaces."
+                }
+            },
+            'Alice Dupont': {
+                description: "Je suis Alice Dupont, experte en Sécurité Cloud. Comment puis-je t'assister ?",
+                questions: [
+                    "1. Quels sont les principaux risques de sécurité dans le Cloud ?",
+                    "2. Comment sécuriser une infrastructure Cloud ?"
+                ],
+                answers: {
+                    1: "Les principaux risques incluent les violations de données, les configurations incorrectes, les attaques par déni de service, et l'accès non autorisé.",
+                    2: "Utilisez des contrôles d'accès stricts, chiffrez les données, surveillez les activités suspectes, et appliquez les meilleures pratiques de configuration."
+                }
+            },
+            'Maxime Legrand': {
+                description: "Je suis Maxime Legrand, consultant en Penetration Testing. Que souhaites-tu savoir ?",
+                questions: [
+                    "1. Qu'est-ce que le Penetration Testing ?",
+                    "2. Quels outils sont utilisés pour le Penetration Testing ?"
+                ],
+                answers: {
+                    1: "Le Penetration Testing est une méthode d'évaluation de la sécurité d'un système en simulant des attaques réelles pour identifier les vulnérabilités.",
+                    2: "Des outils comme Metasploit, Nmap, Burp Suite, et Wireshark sont couramment utilisés pour scanner, exploiter et analyser les systèmes."
+                }
+            },
+            'Richard Stallman': {
+                description: "Je suis Richard Stallman, défenseur du logiciel libre. Que veux-tu savoir ?",
+                questions: [
+                    "1. Qu'est-ce que le logiciel libre ?",
+                    "2. Comment le logiciel libre contribue-t-il à la sécurité informatique ?"
+                ],
+                answers: {
+                    1: "Le logiciel libre est un logiciel dont le code source est librement accessible, modifiable et redistribuable par tous.",
+                    2: "Le logiciel libre favorise la transparence et la collaboration, ce qui permet de détecter et corriger rapidement les vulnérabilités, renforçant ainsi la sécurité informatique."
+                }
+            }
+        };
+
+        const npcTalk = {
+            'Kevin Mitnick': {
+                dialogues: [
+                    "Kevin Mitnick: Salut! Besoin d'aide pour naviguer dans ce système?",
+                    "Kevin Mitnick: Faites attention, les systèmes de sécurité sont plus stricts ici.",
+                    "Kevin Mitnick: Vous pouvez toujours explorer davantage ou renforcer votre attaque."
+                ]
+            },
+            'Adrian Lamo': {
+                dialogues: [
+                    "Adrian Lamo: Bonjour! Vous semblez intéressé par la sécurité informatique.",
+                    "Adrian Lamo: Assurez-vous de toujours suivre les meilleures pratiques de sécurité.",
+                    "Adrian Lamo: Besoin de conseils sur la sécurisation d'un réseau?"
+                ]
+            },
+            'Gary McKinnon': {
+                dialogues: [
+                    "Gary McKinnon: Les attaques DDoS peuvent vraiment mettre un système à rude épreuve.",
+                    "Gary McKinnon: Toujours utiliser des pare-feux pour prévenir les intrusions.",
+                    "Gary McKinnon: Restez vigilant contre les tentatives de hacking."
+                ]
+            },
+            'Albert Gonzalez': {
+                dialogues: [
+                    "Albert Gonzalez: La protection des données sensibles est cruciale dans notre monde numérique.",
+                    "Albert Gonzalez: Utilisez le chiffrement pour sécuriser vos informations.",
+                    "Albert Gonzalez: Les tendances en cybersécurité évoluent rapidement, restez informé."
+                ]
+            },
+            'Anonymous': {
+                dialogues: [
+                    "Anonymous: Nous sommes Anonymous, un collectif de hackers.",
+                    "Anonymous: Nos actions visent souvent à promouvoir la transparence et la justice.",
+                    "Anonymous: Rejoindre notre cause nécessite une forte détermination."
+                ]
+            },
+            'Linus Torvalds': {
+                dialogues: [
+                    "Linus Torvalds: Bonjour! Vous souhaitez contribuer au projet Linux?",
+                    "Linus Torvalds: Linux est un système d'exploitation puissant et flexible.",
+                    "Linus Torvalds: Rejoignez-nous et aidez à améliorer le monde de l'open source."
+                ]
+            },
+            // Nouveaux NPCs
+            'Julien Assengce': {
+                dialogues: [
+                    "Julien Assengce: Le Social Engineering est un art subtil. Utilise-le avec précaution.",
+                    "Julien Assengce: Toujours vérifier les identités avant de partager des informations sensibles.",
+                    "Julien Assengce: La confiance est ta plus grande arme et ta plus grande faiblesse."
+                ]
+            },
+            'Baptiste Robert': {
+                dialogues: [
+                    "Baptiste Robert: Le développement de malware requiert une compréhension approfondie des systèmes.",
+                    "Baptiste Robert: Toujours tester tes créations dans des environnements sécurisés.",
+                    "Baptiste Robert: L'éthique est essentielle dans le développement de logiciels."
+                ]
+            },
+            'MiCode': {
+                dialogues: [
+                    "MiCode: Le Reverse Engineering dévoile les secrets cachés des logiciels.",
+                    "MiCode: Utilise les bons outils pour analyser efficacement.",
+                    "MiCode: Chaque ligne de code raconte une histoire. Apprends à la lire."
+                ]
+            },
+            'Alice Dupont': {
+                dialogues: [
+                    "Alice Dupont: La sécurité dans le Cloud est différente de celle des infrastructures traditionnelles.",
+                    "Alice Dupont: Chiffre toujours tes données avant de les stocker dans le Cloud.",
+                    "Alice Dupont: Surveille les accès et les activités pour prévenir les intrusions."
+                ]
+            },
+            'Maxime Legrand': {
+                dialogues: [
+                    "Maxime Legrand: Le Penetration Testing est crucial pour identifier les vulnérabilités avant les attaquants.",
+                    "Maxime Legrand: Documente toujours tes découvertes et propose des solutions.",
+                    "Maxime Legrand: La persévérance est la clé pour un test de pénétration réussi."
+                ]
+            },
+            'Richard Stallman': {
+                dialogues: [
+                    "Richard Stallman: Le logiciel libre est fondamental pour une cybersécurité transparente.",
+                    "Richard Stallman: En partageant le code source, nous renforçons la confiance et la sécurité des logiciels.",
+                    "Richard Stallman: Défendre le logiciel libre, c'est défendre la liberté et la sécurité numérique."
+                ]
+            }
+        };
+
+        function appendOutput(text) {
+            const newLine = document.createElement('p');
+            newLine.innerHTML = text;
+            output.appendChild(newLine);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function displayHelp(npc) {
+            const npcInfo = npcHelp[npc];
+            if (npcInfo) {
+                appendOutput(`${npc}: ${npcInfo.description}`);
+                npcInfo.questions.forEach((question) => {
+                    appendOutput(question);
+                });
+                appendOutput("Tapez un numéro pour poser une question ou 'exit' pour quitter l'aide.");
+            } else {
+                appendOutput(`${npc} n'a pas d'aide disponible pour le moment.`);
+            }
+        }
+
+        function processHelpResponse(command, npc) {
+            const npcInfo = npcHelp[npc];
+            if (command === 'exit') {
+                appendOutput("Vous avez quitté l'aide.");
+                gameState.helpMode = false;
+            } else {
+                const questionNumber = parseInt(command);
+                if (npcInfo && npcInfo.answers[questionNumber]) {
+                    const answer = npcInfo.answers[questionNumber];
+                    appendOutput(answer);
+                    appendOutput("Tapez un autre numéro ou <strong>exit</strong> pour quitter l'aide.");
+                } else {
+                    appendOutput(`
+                        <div>
+                            Choix invalide. Essayez à nouveau.
+                            <p style="color: red; font-weight: bold;">
+                                Vous êtes actuellement dans l'aide. Vous devez taper 'exit' pour reprendre le cours normal du jeu.
+                            </p>
+                        </div>
+                    `);
+                }
+            }
+        }
+
+        function displayTalk(npc) {
+            const npcInfo = npcTalk[npc];
+            if (npcInfo && npcInfo.dialogues.length > 0) {
+                const dialogue = npcInfo.dialogues[Math.floor(Math.random() * npcInfo.dialogues.length)];
+                appendOutput(dialogue);
+            } else {
+                appendOutput(`${npc} n'a rien à dire pour le moment.`);
+            }
+        }
+
+        function processCommand(command, args) {
+            if (gameState.helpMode) {
+                processHelpResponse(command, gameState.selectedNPC);
+                return;
+            }
+
+            switch(command) {
+                case 'nmap':
+                    appendOutput(`Commande "nmap" exécutée. Scan en cours...`);
+                    setTimeout(() => {
+                        gameState.scanResults = ['Port 22 (SSH)', 'Port 80 (HTTP)'];
+                        appendOutput("Résultats du scan : Port 22 (SSH) et Port 80 (HTTP) ouverts.");
+                        const currentNPC = famousHackers[gameState.currentLocation] || defaultNPC;
+                        appendOutput(`${currentNPC}: "Ces services sont vulnérables. Utilisez 'hydra' ou 'sqlmap' pour exploiter."`);
+                    }, 2000);
+                    break;
+                case 'scan':
+                    if (gameState.scanResults.length > 0) {
+                        appendOutput(`Commande "scan" exécutée. Analyse en cours...`);
+                        setTimeout(() => {
+                            appendOutput("Analyse terminée : SSH est vulnérable au bruteforce. HTTP est vulnérable à une injection SQL.");
+                            const currentNPC = famousHackers[gameState.currentLocation] || defaultNPC;
+                            appendOutput(`${currentNPC}: "Il est temps d'agir. Utilisez 'hydra' ou 'sqlmap'."`);
+                        }, 2000);
+                    } else {
+                        appendOutput("Pas de scan en cours. Exécutez `nmap` d'abord.");
+                    }
+                    break;
+                case 'hydra':
+                    if (gameState.scanResults.includes('Port 22 (SSH)')) {
+                        appendOutput("Tentative de bruteforce en cours avec Hydra...");
+                        setTimeout(() => {
+                            appendOutput("Hydra a réussi à trouver les identifiants SSH : admin:password123");
+                            gameState.score += 100;
+                            appendOutput("Accès SSH obtenu.");
+                            updateScore();
+                            initiateAlarm();
+                        }, 3000);
+                    } else {
+                        appendOutput("Hydra ne peut être utilisé que si SSH est vulnérable. Exécutez `nmap` et `scan` d'abord.");
+                    }
+                    break;
+                case 'sqlmap':
+                    if (gameState.scanResults.includes('Port 80 (HTTP)')) {
+                        appendOutput("Tentative d'injection SQL avec SQLmap...");
+                        setTimeout(() => {
+                            appendOutput("SQLmap a réussi à exploiter l'injection SQL. Base de données exfiltrée.");
+                            gameState.score += 100;
+                            appendOutput("Données sensibles récupérées.");
+                            updateScore();
+                            initiateAlarm();
+                        }, 3000);
+                    } else {
+                        appendOutput("SQLmap ne peut être utilisé que si HTTP est vulnérable. Exécutez `nmap` et `scan` d'abord.");
+                    }
+                    break;
+                case 'help':
+                    gameState.helpMode = true;
+                    gameState.selectedNPC = famousHackers[gameState.currentLocation] || defaultNPC;
+                    displayHelp(gameState.selectedNPC);
+                    break;
+                case 'look':
+                    look();
+                    break;
+                case 'talk':
+                    talk();
+                    break;
+                case 'locpick':
+                    locpick();
+                    break;
+                default:
+                    if (['n', 'e', 's', 'o'].includes(command)) {
+                        handleMovement(command);
+                    } else {
+                        appendOutput(`Commande inconnue. Tapez <span style="font-family: 'Courier New'; color: red;">'help'</span> pour obtenir de l'aide.`);
+                    }
+            }
+        }
+
+        function handleAlarmCommand(command) {
+            switch(command) {
+                case 'hack_alarm':
+                    attemptHackAlarm();
+                    break;
+                case 'flee':
+                    attemptFlee();
+                    break;
+                case 'look':
+                    look();
+                    break;
+                case 'talk':
+                    talk();
+                    break;
+                case 'locpick':
+                    locpick();
+                    break;
+                default:
+                    if (['n', 'e', 's', 'o', 'locpick'].includes(command)) {
+                        appendOutput("Commande non pertinente dans ce contexte. Vous pouvez essayer de hacker l'alarme avec `hack_alarm` ou tenter de fuir avec `flee`.");
+                    } else {
+                        appendOutput("Commande inconnue. Tapez 'hack_alarm' pour hacker l'alarme ou 'flee' pour tenter de fuir.");
+                    }
+            }
+        }
+
+        function look() {
+            const current = gameState.currentLocation;
+            appendOutput(`Vous regardez autour de vous dans ${current}.`);
+            appendOutput(locations[current].description);
+            const exits = Object.keys(locations[current].exits).map(dir => {
+                switch(dir) {
+                    case 'n': return 'Nord';
+                    case 'e': return 'Est';
+                    case 's': return 'Sud';
+                    case 'o': return 'Ouest';
+                    case 'w': return 'Ouest';
+                    default: return dir;
+                }
+            }).join(', ');
+            appendOutput(`Sorties disponibles : ${exits}.`);
+
+            if (current === 'Control Room' && !gameState.clueFound) {
+                appendOutput("Vous trouvez un post-it qui dit : 'Le Datacenter détient les informations critiques. Trouvez un moyen d'y accéder.'");
+                gameState.clueFound = true;
+            }
+        }
+
+        function talk() {
+            const current = gameState.currentLocation;
+            const npc = famousHackers[current];
+            if (npc && npcHelp[npc]) {
+                appendOutput(`Vous engagez la conversation avec ${npc}.`);
+                displayTalk(npc);
+            } else {
+                // Utiliser le NPC par défaut si aucun NPC assigné
+                appendOutput(`Vous engagez la conversation avec ${defaultNPC}.`);
+                displayTalk(defaultNPC);
+            }
+        }
+
+        function attemptHackAlarm() {
+            appendOutput("Tentative de hacking de l'alarme en cours...");
+            setTimeout(() => {
+                const success = Math.random() < 0.7;
+                if (success) {
+                    appendOutput("Hacking réussi ! L'alarme a été désactivée.");
+                    gameState.alarmActive = false;
+                    clearInterval(countdownTimer);
+                    countdown.style.display = "none";
+                } else {
+                    appendOutput("Hacking échoué ! Les autorités se rapprochent.");
+                }
+            }, 3000);
+        }
+
+        function attemptFlee() {
+            appendOutput("Tentative de fuite en cours...");
+            setTimeout(() => {
+                const success = Math.random() < 0.5;
+                if (success) {
+                    appendOutput("Fuite réussie ! Vous êtes maintenant dans la rue.");
+                    gameState.currentLocation = 'Street';
+                    appendOutput(locations['Street'].description);
+                    const hacker = famousHackers['Street'] || defaultNPC;
+                    appendOutput(`Hacker en charge: ${hacker}. Tapez \`help\` pour demander conseil.`);
+                    updateLocation();
+
+                    // Ajout de 40 secondes de répit
+                    appendOutput("Vous avez obtenu 40 secondes de répit.");
+                    gameState.countdown += 40;
+                    appendOutput(`Compte à rebours de l'alarme : ${gameState.countdown} secondes.`);
+                    
+                    // Réinitialisation du timer
+                    clearInterval(countdownTimer);
+                    countdownTimer = setInterval(() => {
+                        gameState.countdown--;
+                        appendOutput(`Compte à rebours de l'alarme : ${gameState.countdown} secondes.`);
+                        if (gameState.countdown <= 0) {
+                            clearInterval(countdownTimer);
+                            countdown.style.display = "none";
+                            triggerArrest();
+                        }
+                    }, 1000);
+                } else {
+                    appendOutput("Fuite échouée ! Les autorités vous ont attrapé.");
+                    triggerArrest();
+                }
+            }, 3000);
+        }
+
+        function handleMovement(direction) {
+            const current = gameState.currentLocation;
+            const exits = locations[current].exits;
+            if (exits[direction]) {
+                if (exits[direction].locked) {
+                    appendOutput("La porte est verrouillée. Vous devez utiliser `locpick` pour la déverrouiller avant de pouvoir passer.");
+                } else {
+                    gameState.currentLocation = exits[direction].to;
+                    appendOutput(`Vous vous déplacez vers ${gameState.currentLocation}.`);
+                    appendOutput(locations[gameState.currentLocation].description);
+                    const hacker = famousHackers[gameState.currentLocation] || defaultNPC;
+                    appendOutput(`Hacker en charge: ${hacker}. Tapez \`help\` pour demander conseil.`);
+                    updateLocation();
+                    if (gameState.alarmActive) {
+                        addToCountdown(10);
+                    }
+                }
+            } else {
+                appendOutput("Vous ne pouvez pas aller dans cette direction depuis ici.");
+            }
+        }
+
+        function locpick() {
+            const current = gameState.currentLocation;
+            const exits = locations[current].exits;
+            let lockedExit = null;
+            let doorType = "";
+
+            for (let direction in exits) {
+                if (exits[direction].locked) {
+                    lockedExit = direction;
+                    break;
+                }
+            }
+
+            if (lockedExit) {
+                switch(current) {
+                    case 'Control Room':
+                        doorType = 'portail renforcé';
+                        break;
+                    case 'Reinforced Gate':
+                        doorType = 'porte sécurisée';
+                        break;
+                    case 'Secured Door':
+                        doorType = 'porte du serveur';
+                        break;
+                    case 'Free Software Lab':
+                        doorType = 'porte du Laboratoire du Logiciel Libre';
+                        break;
+                    default:
+                        doorType = 'porte';
+                }
+
+                appendOutput(`Vous tentez de déverrouiller le ${doorType}...`);
+                const success = Math.random() < 0.6;
+                setTimeout(() => {
+                    if (success) {
+                        exits[lockedExit].locked = false;
+                        appendOutput(`Vous avez réussi à déverrouiller le ${doorType}. Vous pouvez maintenant passer.`);
+                        if (current === 'Server Door') {
+                            accessDatacenter();
+                        }
+                    } else {
+                        appendOutput(`Échec du déverrouillage du ${doorType}. Essayez à nouveau ou trouvez un autre moyen.`);
+                    }
+                }, 2000);
+            } else {
+                appendOutput("Il n'y a aucune porte verrouillée ici à déverrouiller.");
+            }
+        }
+
+        function accessDatacenter() {
+            appendOutput("Vous accédez au Datacenter sécurisé.");
+            appendOutput("Vous lancez `msfconsole` pour vous connecter au réseau...");
+            setTimeout(() => {
+                appendOutput("Connexion établie. Vous commencez à infecter tous les serveurs...");
+                setTimeout(() => {
+                    appendOutput("Botnet géant créé avec succès !");
+                    setTimeout(() => {
+                        appendOutput("Lancement d'une découverte massive des ordinateurs du monde entier sur le réseau Internet...");
+                        setTimeout(() => {
+                            appendOutput("Hack the planet! Vous avez pris le contrôle de milliers d'ordinateurs à travers le monde.");
+                            gameWon();
+                        }, 3000);
+                    }, 3000);
+                }, 3000);
+            }, 3000);
+        }
+
+        function gameWon() {
+            appendOutput("Félicitations ! Vous avez réussi votre mission.");
+            appendOutput("Vous avez gagné le jeu !");
+            // Suppression de la duplication du message
+            // appendOutput("Hack the planet! Vous avez pris le contrôle de milliers d'ordinateurs à travers le monde.");
+            input.disabled = true;
+            clearInterval(countdownTimer);
+            countdown.style.display = "none";
+        }
+
+        function updateLocation() {
+            if (gameState.currentLocation === 'Datacenter') {
+                gameWon();
+            }
+        }
+
+        function updateScore() {
+            appendOutput(`Score actuel: ${gameState.score}`);
+        }
+
+        function initiateAlarm() {
+            if (!gameState.alarmActive) {
+                gameState.alarmActive = true;
+                appendOutput("Une alarme s'est déclenchée ! Les autorités sont en route...");
+                appendOutput("Un officier de sécurité apparaît : 'Vous pouvez tenter de hacker l'alarme avec `hack_alarm` ou tenter de fuir avec `flee`.'");
+                countdown.style.display = "block";
+                gameState.countdown = 10;
+                appendOutput(`Compte à rebours de l'alarme : ${gameState.countdown} secondes.`);
+                countdownTimer = setInterval(() => {
+                    gameState.countdown--;
+                    appendOutput(`Compte à rebours de l'alarme : ${gameState.countdown} secondes.`);
+                    if (gameState.countdown <= 0) {
+                        clearInterval(countdownTimer);
+                        countdown.style.display = "none";
+                        triggerArrest();
+                    }
+                }, 1000);
+            }
+        }
+
+        function addToCountdown(seconds) {
+            if (gameState.alarmActive) {
+                gameState.countdown += seconds;
+                appendOutput(`Le compte à rebours est augmenté de ${seconds} secondes. Nouveau compte à rebours : ${gameState.countdown} secondes.`);
+                clearInterval(countdownTimer);
+                countdownTimer = setInterval(() => {
+                    gameState.countdown--;
+                    appendOutput(`Compte à rebours de l'alarme : ${gameState.countdown} secondes.`);
+                    if (gameState.countdown <= 0) {
+                        clearInterval(countdownTimer);
+                        countdown.style.display = "none";
+                        triggerArrest();
+                    }
+                }, 1000);
+            }
+        }
+
+        function triggerArrest() {
+            if (!gameState.arrested) {
+                gameState.arrested = true;
+                appendOutput("Vous avez été arrêté par les autorités compétentes.");
+                lawModal.style.display = "block";
+                input.disabled = true;
+                clearInterval(countdownTimer);
+                countdown.style.display = "none";
+            }
+        }
+
+        input.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const inputText = input.value.trim().toLowerCase();
+                input.value = '';
+                const [command, ...args] = inputText.split(' ');
+                const arg = args.join(' ');
+                
+                if (gameState.alarmActive) {
+                    handleAlarmCommand(command);
+                } else {
+                    processCommand(command, arg);
+                }
+            }
+        });
+
+        closeLaw.onclick = function() {
+            lawModal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == lawModal) {
+                lawModal.style.display = "none";
+            }
+        }
+
+        function initializeGame() {
+            appendOutput("Bienvenue dans Hacker en Charge. Explorez les systèmes environnants pour découvrir des vulnérabilités.");
+            appendOutput(locations[gameState.currentLocation].description);
+            const hacker = famousHackers[gameState.currentLocation] || defaultNPC;
+            appendOutput(`Hacker en charge: ${hacker}. Tapez <span style="font-family: 'Courier New'; color: red;">'help'</span> pour demander conseil.`);
+        }
+
+        initializeGame();
+    </script>
+</body>
+</html>
+

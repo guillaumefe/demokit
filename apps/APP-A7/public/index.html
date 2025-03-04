@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstration OWASP A07: Identification et Authentification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .login-panel, .bruteforce-panel, .explanation-panel {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+        .warning {
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #0c5460;
+        }
+        code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 2px 5px;
+            display: block;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OWASP Top 10 2021</h1>
+        <h2>A07:2021 - Identification et Authentification</h2>
+    </div>
+
+    <h1>Portail de Connexion</h1>
+    <div id="loginForm">
+        <h2>Connexion</h2>
+        <input type="text" id="username" placeholder="Nom d'utilisateur">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <button onclick="login()">Se connecter</button>
+        <div id="banMessage" class="hidden warning">
+            Vous êtes banni après 5 tentatives échouées. <br>
+            Pour réinitialiser, utilisez les extraits de code disponibles dans les explications ci-dessous.
+        </div>
+    </div>
+
+    <div id="userPanel" class="hidden">
+        <h2>Bienvenue dans votre tableau de bord</h2>
+        <p>Bonjour, <span id="userDisplay"></span>!</p>
+        <button onclick="logout()">Se déconnecter</button>
+    </div>
+
+    <div class="bruteforce-panel">
+        <h2>Outil de Brute Force</h2>
+        <p>Entrez une liste de couples login/mot de passe au format `login:password`, un par ligne :</p>
+        <textarea id="loginPasswordList"></textarea>
+        <button onclick="startBruteForce()">Lancer le Brute Force</button>
+        <div id="bruteForceResult"></div>
+    </div>
+
+    <div>
+        <button onclick="showExplanation()">Explication</button>
+    </div>
+    <div id="explanationPanel" class="hidden explanation-panel"></div>
+
+    <script>
+        const encryptedData = [
+            "YWQtbWluaA==:YWQtbWluaA==",
+            "cm9vdA==:dG9vcg==",
+            "dXNlcg==:dXNlcg==",
+            "dXNlcjE=:dXNlcjE=",
+            "dXNlcjI=:MTIzNDU2Nzg5MTA=",
+            "dXNlcjM=:UGFTc1dvUmQ=",
+            "dXNlcjQ=:UGFTc1dvUmQ="
+        ];
+
+        function decryptBase64(encoded) {
+            return atob(encoded);
+        }
+
+        function decryptUsers(encryptedData) {
+            return encryptedData.map(entry => {
+                const [encUsername, encPassword] = entry.split(":");
+                return {
+                    username: decryptBase64(encUsername),
+                    password: decryptBase64(encPassword)
+                };
+            });
+        }
+
+        const mockDatabase = {
+            users: decryptUsers(encryptedData)
+        };
+
+        let db;
+
+        async function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open("AuthDatabase", 1);
+
+                request.onupgradeneeded = function (event) {
+                    db = event.target.result;
+                    const store = db.createObjectStore("authData", { keyPath: "id" });
+                    store.add({ id: "loginAttempts", value: 0 });
+                    store.add({ id: "banned", value: false });
+                };
+
+                request.onsuccess = function (event) {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = function (event) {
+                    reject("Erreur lors de l'ouverture de la base IndexedDB");
+                };
+            });
+        }
+
+        async function getAuthData(key) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(["authData"], "readonly");
+                const store = transaction.objectStore("authData");
+                const request = store.get(key);
+
+                request.onsuccess = function (event) {
+                    resolve(event.target.result?.value || null);
+                };
+
+                request.onerror = function () {
+                    reject("Erreur lors de la récupération des données");
+                };
+            });
+        }
+
+        async function setAuthData(key, value) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(["authData"], "readwrite");
+                const store = transaction.objectStore("authData");
+                const request = store.put({ id: key, value });
+
+                request.onsuccess = function () {
+                    resolve();
+                };
+
+                request.onerror = function () {
+                    reject("Erreur lors de la mise à jour des données");
+                };
+            });
+        }
+
+        async function login() {
+            const banned = await getAuthData("banned");
+            if (banned) {
+                document.getElementById("banMessage").classList.remove("hidden");
+                return;
+            }
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const user = mockDatabase.users.find(
+                (u) => u.username === username && u.password === password
+            );
+
+            if (user) {
+                alert("Connexion réussie !");
+                await setAuthData("loginAttempts", 0);
+                sessionStorage.setItem("loggedInUser", username);
+                renderPage();
+            } else {
+                let loginAttempts = await getAuthData("loginAttempts");
+                loginAttempts++;
+                await setAuthData("loginAttempts", loginAttempts);
+                alert(`Identifiants incorrects. Tentative ${loginAttempts}/5.`);
+                if (loginAttempts >= 5) {
+                    await setAuthData("banned", true);
+                    document.getElementById("banMessage").classList.remove("hidden");
+                }
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem("loggedInUser");
+            renderPage();
+        }
+
+        async function renderPage() {
+            const loggedInUser = sessionStorage.getItem("loggedInUser");
+            const loginForm = document.getElementById("loginForm");
+            const userPanel = document.getElementById("userPanel");
+
+            if (loggedInUser) {
+                loginForm.classList.add("hidden");
+                userPanel.classList.remove("hidden");
+                document.getElementById("userDisplay").textContent = loggedInUser;
+            } else {
+                loginForm.classList.remove("hidden");
+                userPanel.classList.add("hidden");
+            }
+        }
+
+        async function showExplanation() {
+            const explanationPanel = document.getElementById("explanationPanel");
+            explanationPanel.classList.remove("hidden");
+            explanationPanel.innerHTML = `
+                <h2>Explication et Solutions</h2>
+                <p>Les données de tentatives et bannissements sont stockées dans IndexedDB. 
+                Pour réinitialiser :</p>
+                <h3>Extrait 1 : Réinitialiser les tentatives</h3>
+                <code>
+(async function() {
+    const dbRequest = indexedDB.open("AuthDatabase", 1);
+    dbRequest.onsuccess = function(event) {
+        const db = event.target.result;
+        const transaction = db.transaction(["authData"], "readwrite");
+        const store = transaction.objectStore("authData");
+        store.put({ id: "loginAttempts", value: 0 });
+        store.put({ id: "banned", value: false });
+        console.log("Tentatives réinitialisées.");
+    };
+})();
+                </code>
+                <p>Copiez-collez cet extrait dans la console (<kbd>F12</kbd>).</p>
+                <ul>
+                    <li>Rechargez la page après exécution.</li>
+                </ul>`;
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await openDatabase();
+            renderPage();
+        });
+async function startBruteForce() {
+            const banned = await getAuthData("banned");
+            if (banned) {
+                document.getElementById("banMessage").classList.remove("hidden");
+                return;
+            }
+
+            const loginPasswordList = document.getElementById("loginPasswordList").value.split("\n");
+            const bruteForceResult = document.getElementById("bruteForceResult");
+            bruteForceResult.innerHTML = "<p>Début du brute force...</p>";
+
+            for (const entry of loginPasswordList) {
+                const banned = await getAuthData("banned");
+                if (banned) {
+                    bruteForceResult.innerHTML += "<p>Vous êtes banni. Brute force arrêté.</p>";
+                    return;
+                }
+
+                const [login, pass] = entry.split(":").map((s) => s.trim());
+                const user = mockDatabase.users.find(
+                    (u) => u.username === login && u.password === pass
+                );
+
+                if (user) {
+                    bruteForceResult.innerHTML += `<p>Succès : Trouvé ! Login: <strong>${login}</strong>, Mot de passe: <strong>${pass}</strong></p>`;
+                    await setAuthData("loginAttempts", 0);
+                    return;
+                } else {
+                    let loginAttempts = await getAuthData("loginAttempts");
+                    loginAttempts++;
+                    await setAuthData("loginAttempts", loginAttempts);
+                    bruteForceResult.innerHTML += `<p>Échec : ${entry.trim()}</p>`;
+                    if (loginAttempts >= 5) {
+                        await setAuthData("banned", true);
+                        document.getElementById("banMessage").classList.remove("hidden");
+                        bruteForceResult.innerHTML += "<p>Vous êtes maintenant banni.</p>";
+                        return;
+                    }
+                }
+            }
+            bruteForceResult.innerHTML += "<p>Aucun couple login/mot de passe trouvé dans la liste.</p>";
+        }
+
+    </script>
+</body>
+</html>
+

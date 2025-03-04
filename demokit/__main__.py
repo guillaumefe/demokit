@@ -26,6 +26,13 @@ class Color:
     NC = '\033[0m'
     YELLOW = '\033[1;33m'
 
+class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
 class DockerManager:
     @staticmethod
     def check_docker(wait=False):
@@ -191,8 +198,9 @@ class WebServer:
 
     def start(self):
         os.chdir(self.directory)
-        handler = http.server.SimpleHTTPRequestHandler
-        self.httpd = socketserver.TCPServer(("", self.port), handler)
+        handler = NoCacheHTTPRequestHandler
+        self.httpd = socketserver.TCPServer(("0.0.0.0", self.port), handler)
+        print(f"Serveur web démarré sur le port {self.port}, répertoire : {self.directory}")
         self.httpd.serve_forever()
 
 class AppManager:

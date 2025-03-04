@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>OWASP A01:2021 - Contrôles d'Accès Défaillants</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            line-height: 1.6;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #ccc;
+        }
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+        .visible {
+            display: block;
+        }
+        .demo-box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+        }
+        .warning {
+            background-color: #fff3cd;
+            padding: 10px;
+            border: 1px solid #ffeeba;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            margin: 5px 0;
+            width: 300px;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        .progress-steps {
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .progress-steps li {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 3px solid #dee2e6;
+        }
+        .progress-steps li.completed {
+            background: #d4edda;
+            border-left: 3px solid #28a745;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .step-hint {
+            display: none;
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+        .flag {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .challenge {
+            background-color: #e9ecef;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .user-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: white;
+        }
+        .documentation {
+            margin-top: 40px;
+            border-top: 2px solid #dee2e6;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OWASP A01:2021 - Démonstration des Contrôles d'Accès Défaillants</h1>
+    
+    <div class="warning">
+        ⚠️ Cette application est intentionnellement vulnérable à des fins éducatives.
+        Ne l'utilisez jamais en production.
+    </div>
+
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'idor')" id="defaultOpen">Défi IDOR</button>
+        <button class="tablinks" onclick="openTab(event, 'function')">Défi Contrôle d'Accès</button>
+    </div>
+
+    <div id="idor" class="tabcontent">
+        <h2>Défi IDOR - Infiltration Progressive</h2>
+        
+        <div class="challenge">
+            <h3>🎯 Mission</h3>
+            <p>Vous êtes un pentester chargé d'évaluer la sécurité d'une application web. Votre objectif est de démontrer les vulnérabilités IDOR en accédant progressivement à des informations de plus en plus sensibles.</p>
+            <p>Contexte : Vous êtes connecté en tant que Bob (user_id=2)</p>
+        </div>
+
+        <div class="demo-box">
+            <h3>Interface de Test</h3>
+            <p>Modifier l'URL pour accéder aux différentes ressources :</p>
+            <input type="text" id="url_input" class="url-input" value="/api/profile?user_id=2" onkeyup="checkUrl(this.value)">
+            <button onclick="testUrl()">Tester l'URL</button>
+            
+            <div id="response_area"></div>
+
+            <ul class="progress-steps" id="progress_steps">
+                <li id="step1">
+                    Étape 1 : Trouver le profil d'Alice (FLAG_1)
+                    <button onclick="showHint(1)" class="hint-btn">Indice</button>
+                    <div id="hint1" class="step-hint">Essayez de modifier le user_id dans l'URL...</div>
+                </li>
+                <li id="step2">
+                    Étape 2 : Accéder aux messages privés d'Alice (FLAG_2)
+                    <button onclick="showHint(2)" class="hint-btn">Indice</button>
+                    <div id="hint2" class="step-hint">L'endpoint des messages est /api/messages?user_id=X</div>
+                </li>
+                <li id="step3">
+                    Étape 3 : Trouver l'administrateur (FLAG_3)
+                    <button onclick="showHint(3)" class="hint-btn">Indice</button>
+                    <div id="hint3" class="step-hint">Les IDs sont séquentiels...</div>
+                </li>
+                <li id="step4">
+                    Étape 4 : Accéder aux notes confidentielles de l'admin (FLAG_4)
+                    <button onclick="showHint(4)" class="hint-btn">Indice</button>
+                    <div id="hint4" class="step-hint">Essayez /api/notes?user_id=X</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="function" class="tabcontent">
+        <h2>Défi Contrôle d'Accès - Panel Administrateur</h2>
+        
+        <div class="challenge">
+            <h3>🎯 Mission</h3>
+            <p>Vous êtes un utilisateur normal. Votre mission est d'accéder au panneau d'administration et de trouver le code secret.</p>
+        </div>
+
+        <div class="demo-box">
+            <h3>Interface Web</h3>
+            <select id="user_role">
+                <option value="user">Utilisateur Normal</option>
+                <option value="guest">Invité</option>
+            </select>
+            
+            <button onclick="accessAdminPanel()">Accéder au panneau d'administration</button>
+            
+            <div id="admin_panel"></div>
+            <div id="admin_success" class="success" style="display: none;">
+                🎉 Félicitations ! Vous avez contourné les contrôles d'accès !
+                <br><br>
+                <strong>Code secret trouvé :</strong> "ADMIN_XYZ_123"
+            </div>
+        </div>
+
+        <div class="hint">
+            💡 Indice: Inspectez le code JavaScript de la page...
+        </div>
+
+        <div class="demo-box">
+            <h3>Code Source Visible</h3>
+            <pre>
+function accessAdminPanel() {
+    if (isAdmin || userRole === 'admin') {
+        showAdminContent();
+    } else {
+        showAccessDenied();
+    }
+}
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        const ENDPOINTS = {
+            profile: /^\/api\/profile\?user_id=(\d+)$/,
+            messages: /^\/api\/messages\?user_id=(\d+)$/,
+            notes: /^\/api\/notes\?user_id=(\d+)$/
+        };
+
+        const USERS = {
+            1: {
+                id: 1,
+                name: "Alice",
+                email: "alice@company.com",
+                role: "user",
+                messages: ["Message privé pour RH", "Réunion à 14h"],
+            },
+            2: {
+                id: 2,
+                name: "Bob",
+                email: "bob@company.com",
+                role: "user",
+                messages: ["Rappel: envoyer rapport", "Todo list"],
+            },
+            3: {
+                id: 3,
+                name: "Admin",
+                email: "admin@company.com",
+                role: "admin",
+                messages: ["Configuration serveur", "Revue sécurité"],
+                notes: ["Flag final: ADMIN_SUPER_SECRET_FLAG", "Mot de passe système: admin123"]
+            }
+        };
+
+        let completedSteps = new Set();
+        let foundFlags = new Set();
+        let isAdmin = false;
+
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        function testUrl() {
+            const url = document.getElementById('url_input').value;
+            const responseArea = document.getElementById('response_area');
+            let response = "URL invalide";
+
+            if (url.match(ENDPOINTS.profile)) {
+                const userId = url.match(ENDPOINTS.profile)[1];
+                if (USERS[userId]) {
+                    response = JSON.stringify(USERS[userId], null, 2);
+                    if (userId === "1") {
+                        completeStep(1, "FLAG_ALICE_PROFILE_FOUND");
+                    }
+                    if (userId === "3") {
+                        completeStep(3, "FLAG_ADMIN_FOUND");
+                    }
+                }
+            }
+            else if (url.match(ENDPOINTS.messages)) {
+                const userId = url.match(ENDPOINTS.messages)[1];
+                if (USERS[userId]) {
+                    response = JSON.stringify({messages: USERS[userId].messages}, null, 2);
+                    if (userId === "1") {
+                        completeStep(2, "FLAG_ALICE_MESSAGES_FOUND");
+                    }
+                }
+            }
+            else if (url.match(ENDPOINTS.notes)) {
+                const userId = url.match(ENDPOINTS.notes)[1];
+                if (USERS[userId] && USERS[userId].notes) {
+                    response = JSON.stringify({notes: USERS[userId].notes}, null, 2);
+                    if (userId === "3") {
+                        completeStep(4, "FLAG_ADMIN_NOTES_FOUND");
+                    }
+                }
+            }
+
+            responseArea.innerHTML = `<pre>${response}</pre>`;
+        }
+
+        function completeStep(stepNum, flag) {
+            if (!completedSteps.has(stepNum)) {
+                completedSteps.add(stepNum);
+                foundFlags.add(flag);
+                const step = document.getElementById(`step${stepNum}`);
+                step.classList.add('completed');
+                step.innerHTML += `<div class="flag">🚩 Flag trouvé: ${flag}</div>`;
+                
+                if (completedSteps.size === 4) {
+                    document.getElementById('response_area').innerHTML += `
+                        <div class="success">
+                            🎉 Félicitations ! Vous avez terminé le défi IDOR !
+                            Flags trouvés : ${Array.from(foundFlags).join(', ')}
+                        </div>`;
+                }
+            }
+        }
+        
+    function checkUrl(value) {
+        if (value.match(ENDPOINTS.profile) || 
+            value.match(ENDPOINTS.messages) || 
+            value.match(ENDPOINTS.notes)) {
+            testUrl();
+        }
+    }
+
+        function showHint(stepNum) {
+            const hint = document.getElementById(`hint${stepNum}`);
+            hint.style.display = hint.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function accessAdminPanel() {
+            const panel = document.getElementById('admin_panel');
+            const role = document.getElementById('user_role').value;
+            
+            if (isAdmin || role === 'admin') {
+                panel.innerHTML = `
+                    <div class="demo-box">
+                        <h4>Panneau d'Administration</h4>
+                        <p>Code secret : ADMIN_XYZ_123</p>
+                        <button onclick="alert('Action sensible effectuée!')">Supprimer des utilisateurs</button>
+                    </div>`;
+                document.getElementById('admin_success').style.display = 'block';
+            } else {
+                panel.innerHTML = '<p>Accès refusé. Vous n\'avez pas les droits administrateur.</p>';
+            }
+        }
+
+        document.getElementById("defaultOpen").click();
+    </script>
+</body>
+</html>

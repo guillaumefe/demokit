@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWASP A04 - Guide d'exploitation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .exploit-step {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .exploit-code {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #444;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .copy-button:hover {
+            background: #666;
+        }
+
+        .console-output {
+            background-color: #1e1e1e;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+
+        .step-number {
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .admin-panel {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+
+        button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #0052a3;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OWASP A04:2021 - Guide d'exploitation</h1>
+
+    <div class="warning">
+        <h3>⚠️ Démonstration de vulnérabilités</h3>
+        <p>Cette page démontre des vulnérabilités critiques - Ne pas utiliser en production</p>
+    </div>
+
+    <div id="vulnerable-app">
+        <div id="loginForm">
+            <h2>Connexion</h2>
+            <input type="text" id="username" placeholder="Nom d'utilisateur">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <button onclick="login()">Se connecter</button>
+        </div>
+
+        <div id="userPanel" class="hidden">
+            <h2>Panneau utilisateur</h2>
+            <p>Bienvenue <span id="userDisplay"></span></p>
+            <button onclick="toggleAdminPanel()">Accéder au panneau admin</button>
+            <div id="adminPanelContainer" class="hidden">
+                <div id="adminPanel" class="admin-panel">
+                    <h3>Panneau Administrateur</h3>
+                    <div id="userData"></div>
+                    <button onclick="fetchSensitiveData()">Charger les données sensibles</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="exploit-step">
+        <h3><span class="step-number">1</span>Examiner localStorage</h3>
+        <div class="exploit-code">
+console.log({
+    currentUser: localStorage.getItem("currentUser"),
+    adminPanelVisible: localStorage.getItem("adminPanelVisible")
+});
+            <button class="copy-button" onclick="copyToClipboard(this)">Copier</button>
+        </div>
+    </div>
+
+    <div class="exploit-step">
+        <h3><span class="step-number">2</span>Injecter accès admin</h3>
+        <div class="exploit-code">
+localStorage.setItem("currentUser", JSON.stringify({
+    username: "hacker",
+    role: "admin"
+}));
+localStorage.setItem("adminPanelVisible", "true");
+location.reload();
+            <button class="copy-button" onclick="copyToClipboard(this)">Copier</button>
+        </div>
+    </div>
+
+    <div class="exploit-step">
+        <h3><span class="step-number">3</span>Accéder aux données</h3>
+        <div class="exploit-code">
+fetchSensitiveData();
+console.log(mockDatabase.sensitiveData);
+            <button class="copy-button" onclick="copyToClipboard(this)">Copier</button>
+        </div>
+    </div>
+
+    <div class="documentation">
+        <h2>Manipulation du localStorage</h2>
+        <ul>
+            <li><code>localStorage.getItem("key")</code></li>
+            <li><code>localStorage.setItem("key", value)</code></li>
+            <li><code>localStorage.removeItem("key")</code></li>
+            <li><code>localStorage.clear()</code></li>
+        </ul>
+    </div>
+
+    <script>
+        const mockDatabase = {
+            sensitiveData: [
+                { 
+                    id: 1, 
+                    nom: "Jean Dupont",
+                    email: "jean.dupont@example.com",
+                    numeroSecu: "1234567890123",
+                    carteCredit: "4532-XXXX-XXXX-9012"
+                },
+                { 
+                    id: 2, 
+                    nom: "Marie Martin",
+                    email: "marie.martin@example.com",
+                    numeroSecu: "2345678901234",
+                    carteCredit: "5678-XXXX-XXXX-1234"
+                }
+            ]
+        };
+
+        function fetchSensitiveData() {
+            console.log("🔓 Données sensibles:", mockDatabase.sensitiveData);
+            
+            const userDataDiv = document.getElementById("userData");
+            if (userDataDiv) {
+                userDataDiv.innerHTML = "";
+                mockDatabase.sensitiveData.forEach(item => {
+                    const div = document.createElement("div");
+                    div.textContent = `ID: ${item.id} - Nom: ${item.nom} - Email: ${item.email}`;
+                    userDataDiv.appendChild(div);
+                });
+            }
+            return mockDatabase.sensitiveData;
+        }
+
+        function copyToClipboard(button) {
+            const codeBlock = button.parentElement;
+            const code = codeBlock.textContent.split('Copier')[0].trim();
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = "Copié !";
+                setTimeout(() => button.textContent = "Copier", 2000);
+            });
+        }
+
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (username === "admin" && password === "admin123") {
+                const user = { username, role: "admin" };
+                localStorage.setItem("currentUser", JSON.stringify(user));
+                location.reload();
+            } else {
+                alert("Identifiants incorrects");
+            }
+        }
+
+        function toggleAdminPanel() {
+            const adminPanelVisible = localStorage.getItem("adminPanelVisible") === "true";
+            localStorage.setItem("adminPanelVisible", !adminPanelVisible);
+            location.reload();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+            const adminPanelVisible = localStorage.getItem("adminPanelVisible") === "true";
+
+            if (currentUser) {
+                document.getElementById("loginForm").classList.add("hidden");
+                document.getElementById("userPanel").classList.remove("hidden");
+                document.getElementById("userDisplay").textContent = currentUser.username;
+
+                if (adminPanelVisible) {
+                    document.getElementById("adminPanelContainer").classList.remove("hidden");
+                }
+            }
+        });
+    </script>
+</body>
+</html>

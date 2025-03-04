@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>EGE Game</title>
+  <style>
+    body {
+      font-family: "Noto Sans Mono", "DejaVu Sans Mono", "Consolas", "Courier New", monospace;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    header, footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #252526;
+      border-bottom: 1px solid #333;
+    }
+    header h1 {
+      font-size: 2em;
+      color: #569cd6;
+    }
+    footer p {
+      font-size: 0.9em;
+      color: #888;
+    }
+    #missionContainer {
+      max-width: 900px;
+      margin: 30px auto;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 5px;
+      padding: 20px;
+    }
+    #intro, #terminalArea, #victory {
+      display: none;
+    }
+    #intro.active, #terminalArea.active, #victory.active {
+      display: block;
+    }
+    #terminal {
+      background-color: #000;
+      color: #0f0;
+      padding: 15px;
+      border: 1px solid #333;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      font-size: 0.95em;
+    }
+    #commandInput {
+      width: 100%;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      font-size: 1em;
+      border: 1px solid #333;
+      background-color: #252526;
+      color: #d4d4d4;
+    }
+    button {
+      background-color: #007acc;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005a9e;
+    }
+    code {
+      background-color: #333;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .highlight {
+      display:inline;
+      background-color: lightgreen;
+      color: #333;
+    }
+    
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Opération de Guerre Économique – Simulation d'Attaques</h1>
+    <p>
+      Alors qu'un régime autoritaire, violent et discriminatoire s'est récemment imposé chez l'un de nos partenaires, vos compétences d'agent du renseignement français sont sollicitées de toute urgence pour contrer une menace à même de bouleverser l'ordre mondial.
+    </p>
+  </header>
+  <div id="missionContainer">
+    <div id="intro" class="active">
+      <p>
+        Des informations confidentielles indiquent qu'un régime autoritaire, en place depuis des élections contestées, utilise des systèmes informatiques dans le but de diffuser une idéologie dangereuse. Votre mission est d'infiltrer ces réseaux et de compromettre les systèmes adverses. Vous progresserez d'une machine basique vers des systèmes ultra protégés, pivoterez entre divers réseaux afin de pirater des ordinateurs intermédiaires et attaquerez finalement l'intelligence artificielle stratégique qui contrôle l'exécutif.
+      </p>
+      <p>
+        Chaque niveau vous précisera l'OS (Operating System - Système d'exploitation) sur lequel vous opérerez et fournira des indices visant à déduire l'adresse IP ou le nom de la cible ainsi que les paramètres requis. Pour vous aider, tapez <code>help</code> afin d'afficher la liste des commandes disponibles, ou <code>man &lt;commande&gt;</code> pour obtenir une description détaillée des commandes qui, dans la réalité, font partie de l'arsenal à la disposition de tous les hackers. N'oubliez pas : le hacking est l'art d'exploiter les exceptions d'un système, pour le comprendre, le réparer et parfois l'empêcher de nuire. Le piratage c'est le commerce qui vise à en tirer un avantage personnel. Ne piratez rien, mais hackez tout; Hack the planet.
+      </p>
+      <p>
+        Cliquez sur « Lancer l'opération » pour débuter.
+      </p>
+      <div style="text-align: center; margin-top: 20px;">
+        <button id="startBtn">Lancer l'opération</button>
+      </div>
+    </div>
+    <div id="terminalArea">
+      <h2 id="levelTitle" style="text-align:center;"></h2>
+      <div id="terminal"></div>
+      <input type="text" id="commandInput" placeholder="Tapez votre commande ici..." autocomplete="off">
+    </div>
+    <div id="victory">
+      <h2 style="text-align:center;">Accès obtenu – Système de l'Exécutif</h2>
+      <p>
+        Vous avez infiltré le réseau ultra protégé et compromis l'intelligence artificielle stratégique qui contrôle l'exécutif. Grâce à vos compétences, les contre-mesures adverses ont été désactivées et des données critiques extraites, rétablissant ainsi l'ordre et la paix. Votre action a permis de neutraliser la menace et vous êtes décoré pour votre bravoure.
+      </p>
+      <pre id="asciiArt" style="text-align:center; font-size:1em;">
+         
+▗▄▄▄▖ ▗▄▄▖▗▄▄▄▖     ▗▄▄▖▗▞▀▜▌▄▄▄▄  ▗▞▀▚▖
+▐▌   ▐▌   ▐▌       ▐▌   ▝▚▄▟▌█ █ █ ▐▛▀▀▘
+▐▛▀▀▘▐▌▝▜▌▐▛▀▀▘    ▐▌▝▜▌     █   █ ▝▚▄▄▖
+▐▙▄▄▖▝▚▄▞▘▐▙▄▄▖    ▝▚▄▞▘                
+                                        
+      </pre>
+      <div style="text-align:center; margin-top:20px;">
+        <button id="restartBtn">Recommencer l'opération</button>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p>&copy; 2025 – Opération de Guerre Économique. Simulation pédagogique d'attaques informatiques utilisant des commandes réelles.</p>
+  </footer>
+  <script>
+    const helpMessage = `
+<strong>Commandes disponibles :</strong><br>
+<strong>Linux :</strong> ls, cd, pwd, cp, mv, rm, chmod, chown, cat, grep, find, awk, sed, ssh, sudo, su, ip, ifconfig, ping, traceroute, netstat, curl, wget, nmap, hydra, openssl, dpkg, apt-get<br>
+<strong>Windows :</strong> dir, cd, copy, move, del, type, findstr, ipconfig, ping, tracert, netstat, tasklist, taskkill, reg, net use, systeminfo, shutdown, psexec<br>
+<strong>BSD/macOS :</strong> ls, cd, pwd, cp, mv, rm, chmod, chown, cat, grep, find, awk, sed, ssh, sudo, ifconfig, ping, traceroute, netstat, curl, brew<br>
+<strong>Outils de sécurité :</strong> nmap, sqlmap, hydra, openssl, metasploit, john, burpsuite, wireshark, aircrack-ng, psexec<br>
+Tapez <code>help</code> pour afficher ce message.<br>
+Tapez <code>man &lt;commande&gt;</code> pour obtenir une description détaillée.
+`;
+    const manPages = {
+      "nmap": "nmap : Scanner de réseau pour détecter hôtes et services. Exemple: nmap -sV \"`TARGET_IP`\" (Remplacez \"`TARGET_IP`\" par l'adresse IP de la cible.)",
+      "sqlmap": "sqlmap : Outil d'injection SQL pour extraire des données depuis une application web vulnérable. Exemple: sqlmap -u \"http://`TARGET_IP`/page.php?id=`VALUE`\" --dump (Remplacez \"`TARGET_IP`\" par l'IP de la cible et \"`VALUE`\" par l'identifiant approprié.)",
+      "hydra": "hydra : Outil de brute force pour tester des combinaisons de mots de passe. Exemple: hydra -l \"`USERNAME`\" -P \"`PATH_TO_WORDLIST`\" ssh://\"`TARGET_IP`\" (Remplacez \"`USERNAME`\", \"`PATH_TO_WORDLIST`\" et \"`TARGET_IP`\" par les valeurs appropriées.)",
+      "openssl": "openssl : Outil de chiffrement/déchiffrement. Exemple: openssl enc -d -aes-128-cbc -in \"`FILE`\" -K \"`KEY_IN_HEX`\" (Remplacez \"`FILE`\" par le fichier cible et \"`KEY_IN_HEX`\" par la clé en hexadécimal.)",
+      "sed": "sed : Éditeur de flux pour modifier du texte. Exemple (macOS): sed -i '' 's/`OLD`/`NEW`/g' \"`FILE`\" (Remplacez \"`OLD`\" par le texte à rechercher, \"`NEW`\" par le texte de remplacement et \"`FILE`\" par le chemin du fichier.)",
+      "reg": "reg : Commande Windows pour manipuler le registre. Exemple: reg add \"`REGISTRY_PATH`\" /v \"`VALUE_NAME`\" /t REG_DWORD /d \"`VALUE`\" /f (Remplacez \"`REGISTRY_PATH`\", \"`VALUE_NAME`\" et \"`VALUE`\" par les valeurs appropriées.)",
+      "curl": "curl : Outil pour transférer des données via divers protocoles. Exemple: curl \"http://`TARGET_DOMAIN`\" (Remplacez \"`TARGET_DOMAIN`\" par le nom de domaine ou l'IP de la cible.)",
+      "grep": "grep : Outil de recherche par motifs dans des fichiers. Exemple: grep '`PATTERN`' \"`FILE`\" (Remplacez \"`PATTERN`\" par le motif recherché et \"`FILE`\" par le fichier cible.)",
+      "dpkg": "dpkg : Gestionnaire de paquets pour systèmes Debian. Exemple: dpkg -l | grep \"`PACKAGE_NAME`\" (Remplacez \"`PACKAGE_NAME`\" par le nom du paquet.)",
+      "cmd": "cmd : Interpréteur de commandes sous Windows. Exemple: cmd /c \"dir\" (Exécute la commande 'dir' puis ferme la session cmd). Pour lancer une nouvelle fenêtre de commandes persistante, utilisez simplement cmd (sans options).",
+      "net": "net : Commande Windows pour gérer les partages réseau. Exemple: net use \\\\`SERVER`\\`SHARE` /user:`USERNAME` \"`PASSWORD`\" (Remplacez \"`SERVER`\", \"`SHARE`\", \"`USERNAME`\" et \"`PASSWORD`\" par les valeurs appropriées.)",
+      "psexec": "psexec : Outil Sysinternals pour exécuter des commandes à distance sous Windows. Exemple: psexec \"\\\\`TARGET`\" \"cmd\" (Remplacez \"`TARGET`\" par l'IP ou le nom de la cible.)",
+      "rm": "rm : Commande Unix/Linux pour supprimer des fichiers ou des répertoires. Exemple: rm -rf `TARGET_FOLDER` (Supprime le dossier et tout son contenu. Remplacez \"`TARGET_FOLDER`\" par le chemin du répertoire visé.)",
+      "rmdir": "rmdir : Commande Windows pour supprimer un répertoire, vide ou non, avec des options de récursivité et de silence. Exemple: rmdir /s /q `TARGET_FOLDER` (Remplacez \"`TARGET_FOLDER`\" par le chemin du répertoire que vous souhaitez supprimer, par exemple C:\\AISERVER.)",
+      "ls": "ls : Liste le contenu d'un répertoire sous Unix/Linux/macOS/BSD. Exemple: ls -la (Affiche en détail tous les fichiers, y compris les fichiers cachés).",
+      "cd": "cd : Change le répertoire courant. Exemple Linux/macOS: cd /home/user (Se déplace vers /home/user). Exemple Windows: cd C:\\Users\\Public (Se déplace vers C:\\Users\\Public).",
+      "pwd": "pwd : Affiche le chemin absolu du répertoire courant. Exemple: pwd (Retourne /home/user si vous êtes dans ce répertoire).",
+      "cp": "cp : Copie un ou plusieurs fichiers ou répertoires. Exemple: cp fichier1.txt dossier/ (Copie fichier1.txt dans le dossier).",
+      "mv": "mv : Déplace ou renomme des fichiers ou répertoires. Exemple: mv oldname.txt newname.txt (Renomme le fichier oldname.txt en newname.txt).",
+      "chmod": "chmod : Modifie les permissions d'un fichier ou répertoire. Exemple: chmod 755 script.sh (Donne tous les droits au propriétaire, et lecture/exécution aux autres).",
+      "chown": "chown : Change le propriétaire ou le groupe d'un fichier ou répertoire. Exemple: chown root:root /var/log/syslog (Assigne le fichier /var/log/syslog à l'utilisateur root et au groupe root).",
+      "cat": "cat : Affiche le contenu d'un fichier ou concatène plusieurs fichiers. Exemple: cat /etc/passwd (Affiche le contenu du fichier passwd).",
+      "find": "find : Recherche des fichiers en fonction de critères. Exemple: find / -name \"config.php\" (Recherche un fichier nommé config.php à partir de la racine).",
+      "awk": "awk : Langage de traitement de texte en ligne de commande. Exemple: awk '{print $1}' fichier.txt (Affiche la première colonne de chaque ligne).",
+      "ssh": "ssh : Permet de se connecter à une machine distante de manière sécurisée. Exemple: ssh user@192.168.1.10 (Ouvre une session SSH sur la machine 192.168.1.10).",
+      "sudo": "sudo : Exécute une commande avec les privilèges superutilisateur. Exemple: sudo apt-get update (Effectue la mise à jour des paquets avec les droits root).",
+      "su": "su : Permet de changer d'utilisateur dans un shell. Exemple: su - root (Demande le mot de passe et ouvre une session pour root).",
+      "ip": "ip : Outil pour gérer les interfaces réseau et les routes (Linux). Exemple: ip addr show (Affiche les adresses IP configurées sur les interfaces).",
+      "ifconfig": "ifconfig : Ancien outil pour configurer les interfaces réseau. Exemple: ifconfig eth0 192.168.1.10 netmask 255.255.255.0 (Assigne une adresse IP à l'interface eth0).",
+      "ping": "ping : Vérifie la connectivité réseau en envoyant des paquets ICMP. Exemple: ping 8.8.8.8 (Envoie des requêtes ICMP vers l'IP 8.8.8.8).",
+      "traceroute": "traceroute : Détermine le chemin emprunté pour atteindre une cible. Exemple: traceroute google.com (Affiche les routeurs traversés jusqu'à google.com). Sous Windows, la commande équivalente est tracert.",
+      "netstat": "netstat : Affiche les connexions réseau, les tables de routage et les statistiques. Exemple Linux: netstat -tulpn (Montre les ports TCP/UDP en écoute). Exemple Windows: netstat -ano.",
+      "wget": "wget : Outil pour télécharger des fichiers via HTTP, HTTPS ou FTP. Exemple: wget http://exemple.com/fichier.zip (Télécharge fichier.zip).",
+      "apt-get": "apt-get : Gestionnaire de paquets pour Debian/Ubuntu. Exemple: apt-get install htop (Installe le paquet htop).",
+      "dir": "dir : Liste les fichiers et dossiers du répertoire courant sous Windows. Exemple: dir C:\\Windows (Liste le contenu du dossier Windows).",
+      "copy": "copy : Copie des fichiers d'un emplacement à un autre sur Windows. Exemple: copy C:\\fichier.txt D:\\Backup (Copie fichier.txt vers D:\\Backup).",
+      "move": "move : Déplace ou renomme des fichiers ou dossiers sous Windows. Exemple: move C:\\oldname.txt C:\\newname.txt (Renomme oldname.txt en newname.txt).",
+      "del": "del : Supprime un ou plusieurs fichiers sous Windows. Exemple: del C:\\temp\\*.txt (Supprime tous les fichiers .txt dans C:\\temp).",
+      "type": "type : Affiche le contenu d'un fichier sous Windows. Exemple: type C:\\Windows\\System32\\drivers\\etc\\hosts (Affiche le contenu du fichier hosts).",
+      "findstr": "findstr : Recherche un motif texte dans un ou plusieurs fichiers Windows. Exemple: findstr /i \"erreur\" C:\\logs\\*.log (Recherche le mot 'erreur' en ignorant la casse).",
+      "ipconfig": "ipconfig : Affiche la configuration réseau de la machine Windows. Exemple: ipconfig /all (Liste toutes les interfaces et leurs adresses).",
+      "tracert": "tracert : Détermine le chemin emprunté pour atteindre une cible sous Windows. Exemple: tracert google.com (Affiche les routeurs traversés jusqu'à google.com).",
+      "tasklist": "tasklist : Liste les processus en cours d'exécution sous Windows. Exemple: tasklist /svc (Affiche les services hébergés par chaque processus).",
+      "taskkill": "taskkill : Stoppe un processus ou une application Windows. Exemple: taskkill /PID 1234 /F (Force l'arrêt du processus PID 1234).",
+      "net use": "net use : Établit ou supprime une connexion à un partage réseau Windows. Exemple: net use \\\\serveur\\partage /user:dom\\utilisateur motdepasse (Monte le partage distant).",
+      "systeminfo": "systeminfo : Affiche des informations détaillées sur le système Windows. Exemple: systeminfo (Liste la version du système, le type de processeur, etc.).",
+      "shutdown": "shutdown : Permet d'arrêter, redémarrer ou déconnecter un système Windows. Exemple: shutdown /r /t 0 (Redémarre immédiatement la machine).",
+      "brew": "brew : Gestionnaire de paquets pour macOS (Homebrew). Exemple: brew install wget (Installe wget via Homebrew).",
+      "metasploit": "metasploit : Framework d'exploitation pour tester la sécurité des systèmes. Exemple: msfconsole (Ouvre la console Metasploit).",
+      "john": "john : John the Ripper, outil de récupération de mots de passe. Exemple: john --wordlist=rockyou.txt hash.txt (Teste les mots de passe depuis rockyou.txt).",
+      "burpsuite": "burpsuite : Plateforme d'analyse et de test de sécurité des applications web. Exemple: (Interface graphique) Lancez Burp et configurez le proxy pour auditer le trafic HTTP/S.",
+      "wireshark": "wireshark : Analyseur de paquets réseau. Exemple: wireshark (Ouvre l'interface graphique pour capturer et analyser le trafic).",
+      "aircrack-ng": "aircrack-ng : Suite d'outils pour tester la sécurité Wi-Fi. Exemple: aircrack-ng capture.cap -w wordlist.txt (Brute force d'une capture WPA).",
+      "help": "help : Affiche la liste des commandes disponibles.",
+      "man": "man \"`commande`\" : Affiche la page de manuel pour la commande spécifiée."
+    };
+    const levels = [
+      {
+        "title": "Niveau 1 : Système de l'Agent – Linux",
+        "os": "Linux",
+        "instructions": "Vous commencez sur votre poste Kali Linux de base. Des analyses internes indiquent que la cible vulnérable se trouve à l'adresse <pre class=\"highlight\">\"10.10.0.10\"</pre>. Le système ne protège pas correctement l'accès administrateur. Pour obtenir l'accès root, vous pouvez utiliser l'outil <pre class=\"highlight\">hydra</pre>. Vous combinerez l'option <pre class=\"highlight\">-l</pre> pour spécifier l'utilisateur <pre class=\"highlight\">\"root\"</pre>, l'option <pre class=\"highlight\">-P</pre> pour fournir le chemin vers une wordlist <pre class=\"highlight\">\"/usr/share/wordlists/rockyou.txt\"</pre> et la cible via SSH indiquée comme <pre class=\"highlight\">ssh://\"10.10.0.10\"</pre>. Hydra, issu du projet THC Hydra, est un outil de brute force réputé qui teste rapidement d'innombrables combinaisons de mots de passe sur divers protocoles.\n",
+        "expectedCommand": "hydra -l \"root\" -P \"/usr/share/wordlists/rockyou.txt\" ssh://\"10.10.0.10\"",
+        "successMessage": "Succès : Accès root obtenu via brute force. Les premières informations sensibles sont récupérées."
+      },
+      {
+        "title": "Niveau 2 : Pivot – Système Windows",
+        "os": "Windows",
+        "instructions": "À présent, vous vous êtes introduit dans un environnement Windows peu sécurisé. Des analyses réseau indiquent que le serveur web interne vulnérable se trouve à l'adresse <pre class=\"highlight\">10.10.0.20</pre>. Le formulaire de connexion présente des anomalies typiques d'une faille d'injection SQL. Pour extraire des données sensibles, vous utiliserez <pre class=\"highlight\">sqlmap</pre> en spécifiant l'URL <pre class=\"highlight\">-u \"http://{IP}/login.php?id=1\"</pre> et l'option <pre class=\"highlight\">--dump</pre>. SQLMap, développé par des experts en sécurité, est un outil d'injection SQL automatisé qui a révolutionné l'audit de sécurité web.\n",
+        "expectedCommand": "sqlmap -u \"http://10.10.0.20/login.php?id=1\" --dump",
+        "successMessage": "Succès : Injection SQL réussie, données extraites. Des informations stratégiques sur le réseau interne sont obtenues."
+      },
+      {
+        "title": "Niveau 3 : Analyse de Données – Linux",
+        "os": "Linux",
+        "instructions": "Grâce aux accès Windows précédents, vous avez identifié un point de rebond vers une autre machine Linux. Sur ce système, un fichier nommé <pre class=\"highlight\">\"secret.enc\"</pre> contient des informations critiques. Les rapports indiquent que le chiffrement est faible. Pour déchiffrer ce fichier, vous utiliserez <pre class=\"highlight\">openssl enc</pre> avec l'option <pre class=\"highlight\">-d</pre>, le mode <pre class=\"highlight\">-aes-128-cbc</pre>, <pre class=\"highlight\">-in</pre> pour le fichier source, et <pre class=\"highlight\">-K</pre> pour fournir la clé hexadécimal <pre class=\"highlight\">\"31323334\"</pre>. OpenSSL, standard de l'industrie, a été inventé par l'OpenSSL Project pour sécuriser les communications sur Internet.\n",
+        "expectedCommand": "openssl enc -d -aes-128-cbc -in \"secret.enc\" -K \"31323334\"",
+        "successMessage": "Succès : Fichier décrypté, informations récupérées. De nouveaux indices apparaissent dans les données obtenues."
+      },
+      {
+        "title": "Niveau 4 : Altération Logicielle – macOS",
+        "os": "macOS",
+        "instructions": "Après avoir navigué entre plusieurs serveurs Linux, vous parvenez sur une machine macOS hautement surveillée. Le binaire situé à <pre class=\"highlight\">\"/usr/local/bin/target_app\"</pre> présente une vulnérabilité. Des analyses textuelles montrent que le mot <pre class=\"highlight\">secure</pre> apparaît dans le code. Pour altérer ce binaire, vous utiliserez <pre class=\"highlight\">sed</pre> pour remplacer <pre class=\"highlight\">secure</pre> par <pre class=\"highlight\">compromised</pre> grâce à la syntaxe spécifique de cette commande. Laquelle doit en outre être adaptée à macOS, avec l'option <pre class=\"highlight\">-i ''</pre> pour une modification in situ. Sed, un éditeur de flux issu de l'univers Unix, a été conçu pour automatiser le traitement de grands volumes de textes.\n",
+        "expectedCommand": "sed -i '' 's/secure/compromised/g' \"/usr/local/bin/target_app\"",
+        "successMessage": "Succès : Binaire altéré, intégrité compromise. De nouvelles fonctionnalités sont accessibles."
+      },
+      {
+        "title": "Niveau 5 : Reconfiguration – Système Windows",
+        "os": "Windows",
+        "instructions": "Grâce à votre présence sur la machine macOS, vous identifiez un second hôte Windows vulnérable. Des relevés du registre indiquent que la clé <pre class=\"highlight\">\"HKLM\\Software\\Adversary\"</pre> a une valeur trop élevée pour <pre class=\"highlight\">\"SecureMode\"</pre>. Pour la modifier, vous utiliserez la commande <pre class=\"highlight\">reg</pre> avec l'option <pre class=\"highlight\">add</pre>, en précisant la clé (<pre class=\"highlight\">\"HKLM\\Software\\Adversary\"</pre>), la valeur (<pre class=\"highlight\">/v \"SecureMode\"</pre>), le type (<pre class=\"highlight\">/t REG_DWORD</pre>), la donnée (<pre class=\"highlight\">/d \"0\"</pre>) et l'option (<pre class=\"highlight\">/f</pre>) pour forcer la modification. La commande reg, développée par Microsoft, permet une configuration scriptable du registre.\n",
+        "expectedCommand": "reg add \"HKLM\\Software\\Adversary\" /v \"SecureMode\" /t REG_DWORD /d \"0\" /f",
+        "successMessage": "Succès : La configuration de sécurité a été modifiée. Vous obtenez un accès accru au réseau interne."
+      },
+      {
+        "title": "Niveau 6 : Pivot Réseau – Linux",
+        "os": "Linux",
+        "instructions": "En vous connectant à un commutateur central, vous reprenez la main sur un serveur Linux essentiel. Des communications internes révèlent qu'une ressource critique est hébergée sur un autre segment, identifié par <pre class=\"highlight\">internal.adversary.local</pre>. Pour forcer l'accès à cette ressource, vous utiliserez la commande <pre class=\"highlight\">curl</pre> en précisant l'URL <pre class=\"highlight\">\"http://internal.adversary.local\"</pre>. Curl, créé par Daniel Stenberg, est un outil polyvalent pour transférer des données et tester les communications HTTP.\n",
+        "expectedCommand": "curl \"http://internal.adversary.local\"",
+        "successMessage": "Succès : L'attaque SSRF a forcé l'accès à la ressource interne. Vous commencez à remonter la chaîne hiérarchique."
+      },
+      {
+        "title": "Niveau 7 : Analyse des Logs – BSD",
+        "os": "BSD",
+        "instructions": "Vous êtes parvenu à basculer sur une machine BSD rarement mise à jour mais cruciale pour la supervision. Des rapports de sécurité indiquent que le fichier <pre class=\"highlight\">\"/var/log/auth.log\"</pre> contient des données sensibles. Pour extraire ces informations, vous utiliserez la commande <pre class=\"highlight\">grep</pre> en précisant le motif <pre class=\"highlight\">'password'</pre> et le fichier <pre class=\"highlight\">\"/var/log/auth.log\"</pre>. Grep, né dans l'univers Unix, permet d'extraire rapidement des motifs spécifiques dans de grands ensembles de données.\n",
+        "expectedCommand": "grep 'password' \"/var/log/auth.log\"",
+        "successMessage": "Succès : Informations sensibles extraites des logs. De nouveaux indices apparaissent sur l'infrastructure."
+      },
+      {
+        "title": "Niveau 8 : Composants Obsolètes – Linux",
+        "os": "Linux",
+        "instructions": "Vous revenez sur un autre nœud Linux, plus ancien, qui abrite des données obsolètes. Un rapport indique qu'un paquet marqué <pre class=\"highlight\">\"vulnerable\"</pre> est installé. Pour l'identifier, vous utiliserez la commande <pre class=\"highlight\">dpkg</pre> avec l'option <pre class=\"highlight\">-l</pre> et un pipe vers <pre class=\"highlight\">grep</pre> pour filtrer les résultats contenant <pre class=\"highlight\">\"package_vulnerable\"</pre>. Dpkg est le gestionnaire de paquets pour les systèmes Debian, essentiel pour la gestion et la vérification des logiciels.\n",
+        "expectedCommand": "dpkg -l | grep \"package_vulnerable\"",
+        "successMessage": "Succès : Composant obsolète identifié et exploité. Vous gagnez un accès privilégié à un segment critique du réseau."
+      },
+      {
+        "title": "Niveau 9 : Exploitation XSS – Système Windows",
+        "os": "Windows",
+        "instructions": "Vous parvenez maintenant à un dernier pivot Windows. Sur ce serveur web, des analyses de vulnérabilité ont détecté une faille XSS. Des communications internes indiquent que la cible se trouve à l'adresse <pre class=\"highlight\">\"10.10.0.30\"</pre>. Pour injecter un script malveillant, vous utiliserez la commande <pre class=\"highlight\">nmap</pre> avec l'option <pre class=\"highlight\">--script http-xssed</pre>, le port <pre class=\"highlight\">-p80</pre> et l'IP <pre class=\"highlight\">\"10.10.0.30\"</pre>. Nmap, créé par Gordon Lyon (Fyodor), est un scanner de réseau open-source qui, grâce à ses scripts NSE, permet d'automatiser des tests de vulnérabilité, y compris les attaques XSS.\n",
+        "expectedCommand": "nmap --script http-xssed -p80 \"10.10.0.30\"",
+        "successMessage": "Succès : Le script XSS a été injecté, et des données critiques ont été extraites, semant la confusion parmi les adversaires."
+      },
+      {
+        "title": "Niveau 10 : Hacker l'IA – Système de l'Exécutif – Windows",
+        "os": "Windows",
+        "instructions": "Enfin, vous pénétrez le système ultra protégé de l'exécutif, contrôlé par l'IA stratégique. Des renseignements indiquent que le serveur de cette IA se nomme <pre class=\"highlight\">\"AISERVER\"</pre>. Pour la compromettre, vous utiliserez la commande <pre class=\"highlight\">psexec</pre> en lui passant la cible <pre class=\"highlight\">\"\\\\AISERVER\"</pre> et le programme <pre class=\"highlight\">\"cmd\"</pre>. Psexec, faisant partie de la suite Sysinternals développée par Mark Russinovich, permet d'exécuter des commandes à distance sous Windows et est un outil incontournable pour l'administration à distance et le piratage ciblé. Vous vous apprêtez à restaurer la paix et à vous voir décoré pour votre bravoure. Mais avant, il vous reste une dernière chose à faire.\n",
+        "expectedCommand": "psexec \"\\\\AISERVER\" \"cmd\"",
+        "successMessage": "Succès : L'IA a été compromise, ses contre-mesures désactivées. Un dernier défi vous attend."
+      },
+      {
+        "title": "Niveau 11 : Destruction Finale – Système Windows",
+        "os": "Windows",
+        "instructions": "Vous accédez maintenant à la console de l'IA neutralisée. Pour anéantir définitivement le système et effacer toute trace, vous utiliserez la commande <pre class=\"highlight\">rmdir</pre> en récursif et silencieux, simulant l'effet d'un <pre class=\"highlight\">rm -rf</pre> que les Linuxiens redoutent. Sur Windows, cela consiste à cibler le répertoire racine de l'IA avec <pre class=\"highlight\">/s</pre> et <pre class=\"highlight\">/q</pre> pour l'obliger à s'auto-détruire en supprimant l'intégralité de son propre système depuis lui-même. À vous de porter le coup fatal à l'ennemi.\n",
+        "expectedCommand": "rmdir /s /q C:\\AISERVER",
+        "successMessage": "Succès : Le système de l'IA a été entièrement détruit. Vous émergez en héros, ayant sauvé l'ordre mondial."
+      }
+    ];
+    
+    const asciiArtSuccess = `
+
+ ▗▄▄▖█  ▐▌▗▞▀▘▗▞▀▘▗▞▀▚▖ ▄▄▄  ▄▄▄ 
+▐▌   ▀▄▄▞▘▝▚▄▖▝▚▄▖▐▛▀▀▘▀▄▄  ▀▄▄  
+ ▝▀▚▖             ▝▚▄▄▖▄▄▄▀ ▄▄▄▀ 
+▗▄▄▞▘                            
+                                 
+                                 
+    `;
+    
+    const asciiArtSuccessThen = `
+
+▗▄▄▖ █  ▐▌   ■         ■  ▐▌   ▄  ▄▄▄     ▄  ▄▄▄        ▗▖█  ▐▌ ▄▄▄  ■      ▗▞▀▜▌       ▗▞▀▜▌▄▄▄▄  ▗▞▀▚▖▄ ▄ ▄ 
+▐▌ ▐▌▀▄▄▞▘▗▄▟▙▄▖    ▗▄▟▙▄▖▐▌   ▄ ▀▄▄      ▄ ▀▄▄         ▗▖▀▄▄▞▘▀▄▄▗▄▟▙▄▖    ▝▚▄▟▌       ▝▚▄▟▌█ █ █ ▐▛▀▀▘      
+▐▛▀▚▖       ▐▌        ▐▌  ▐▛▀▚▖█ ▄▄▄▀     █ ▄▄▄▀     ▄  ▐▌     ▄▄▄▀ ▐▌                       █   █ ▝▚▄▄▖      
+▐▙▄▞▘       ▐▌        ▐▌  ▐▌ ▐▌█          █          ▀▄▄▞▘          ▐▌                ▗▄▖                     
+            ▐▌        ▐▌                                            ▐▌               ▐▌ ▐▌                    
+                                                                                      ▝▀▜▌                    
+                                                                                     ▐▙▄▞▘                    
+    `;
+    
+
+    let currentLevel = 0;
+    const terminalArea = document.getElementById("terminalArea");
+    const terminal = document.getElementById("terminal");
+    const commandInput = document.getElementById("commandInput");
+    const levelTitleElem = document.getElementById("levelTitle");
+    const intro = document.getElementById("intro");
+    const victory = document.getElementById("victory");
+    function appendToTerminal(message) {
+      terminal.innerHTML += message + "<br>";
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+    function showHelp() {
+      appendToTerminal(helpMessage);
+    }
+    function showMan(cmd) {
+      if (manPages[cmd]) {
+        appendToTerminal("<strong>Man " + cmd + ":</strong> " + manPages[cmd]);
+      } else {
+        appendToTerminal("Aucune page de manuel trouvée pour " + cmd);
+      }
+    }
+    function startLevel(levelIndex) {
+      const level = levels[levelIndex];
+      levelTitleElem.textContent = level.title + " [" + level.os + "]";
+      terminal.innerHTML = "";
+      appendToTerminal(">> " + level.instructions);
+      appendToTerminal(">> Entrez la commande souhaitée (vous pouvez taper 'help' ou 'man <commande>'):");
+      commandInput.value = "";
+      commandInput.focus();
+    }
+    function processCommand() {
+      const level = levels[currentLevel];
+      const enteredCommand = commandInput.value.trim();
+      if (enteredCommand.toLowerCase() === "help") {
+        showHelp();
+        commandInput.value = "";
+        return;
+      }
+      if (enteredCommand.toLowerCase().startsWith("man ")) {
+        const parts = enteredCommand.split(" ");
+        if (parts.length >= 2) {
+          showMan(parts[1]);
+        } else {
+          appendToTerminal("Usage: man <commande>");
+        }
+        commandInput.value = "";
+        return;
+      }
+      
+      // Commande secrète "soluce"
+      if (enteredCommand.toLowerCase() === "soluce") {
+        appendToTerminal(level.expectedCommand);
+        commandInput.value = "";
+        return;
+      }
+      
+      appendToTerminal(">> " + enteredCommand);
+      if (enteredCommand === level.expectedCommand) {
+        appendToTerminal(level.successMessage);
+        setTimeout(() => {
+          currentLevel++;
+          if (currentLevel < levels.length) {
+            startLevel(currentLevel);
+          } else {
+            terminalArea.classList.remove("active");
+            victory.classList.add("active");
+            // Animation ASCII en deux temps
+            const asciiArt = document.getElementById("asciiArt");
+            setTimeout(() => {
+              asciiArt.innerHTML = asciiArtSuccess;
+              setTimeout(() => {
+                asciiArt.innerHTML = asciiArtSuccessThen;
+              }, 5000);
+            }, 0);
+          }
+        }, 1500);
+      } else {
+        appendToTerminal("Erreur : commande incorrecte. Tapez 'help' pour voir la liste des commandes et 'man <commande>' pour plus d'infos.");
+      }
+      commandInput.value = "";
+    }
+    commandInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        processCommand();
+      }
+    });
+    document.getElementById("startBtn").addEventListener("click", function () {
+      intro.classList.remove("active");
+      terminalArea.classList.add("active");
+      currentLevel = 0;
+      startLevel(currentLevel);
+    });
+    document.getElementById("restartBtn").addEventListener("click", function () {
+      victory.classList.remove("active");
+      intro.classList.add("active");
+      terminal.innerHTML = "";
+      commandInput.value = "";
+    });
+  </script>
+</body>
+</html>
+

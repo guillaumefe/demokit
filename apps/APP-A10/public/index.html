@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz SSRF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .question {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .options {
+            margin-top: 10px;
+        }
+        .option {
+            margin-bottom: 5px;
+        }
+        .score {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Quiz SSRF</h1>
+    <div id="quiz"></div>
+    <div class="score" id="score"></div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Qu'est-ce qu'une vulnérabilité SSRF ?",
+                options: [
+                    "Une attaque qui cible les utilisateurs finaux",
+                    "Une faille qui permet d'accéder à des ressources distantes non autorisées",
+                    "Un problème d'authentification",
+                    "Un déni de service"
+                ],
+                answer: 1
+            },
+            {
+                question: "Comment les attaquants exploitent-ils une vulnérabilité SSRF ?",
+                options: [
+                    "En envoyant des requêtes HTTPS chiffrées",
+                    "En forçant l'application à accéder à des destinations web malveillantes",
+                    "En utilisant des injections SQL",
+                    "En volant les cookies des utilisateurs"
+                ],
+                answer: 1
+            },
+            {
+                question: "Les SSRF peuvent-ils contourner les pare-feux et autres défenses ?",
+                options: [
+                    "Oui",
+                    "Non",
+                    "Seulement les pare-feux matériels",
+                    "Uniquement dans les applications mobiles"
+                ],
+                answer: 0
+            },
+            {
+                question: "Quels types de relations de confiance peuvent être exploités par SSRF ?",
+                options: [
+                    "Les APIs backend",
+                    "Les services de métadonnées cloud",
+                    "Les bases de données internes",
+                    "Toutes les réponses ci-dessus"
+                ],
+                answer: 3
+            },
+            {
+                question: "Comment atténuer les risques de SSRF ?",
+                options: [
+                    "En implémentant l'authentification multi-facteurs",
+                    "En utilisant un WAF pour contrôler les accès URI",
+                    "En appliquant le chiffrement de bout en bout", 
+                    "En faisant des sauvegardes régulières"
+                ],
+                answer: 1
+            },
+            {
+                question: "Que signifie l'acronyme SSRF ?",
+                options: [
+                    "Server-Side Request Forgery",
+                    "Secure Socket Request Filtering",
+                    "Same-Site Request Forwarding",
+                    "Server-Side Response Filtering"
+                ],
+                answer: 0
+            },
+            {
+                question: "Quel protocole est souvent utilisé dans les attaques SSRF ?",
+                options: [
+                    "FTP",
+                    "HTTP",
+                    "SMTP",
+                    "SSH"
+                ],
+                answer: 1
+            },
+            {
+                question: "Les SSRF peuvent-ils conduire à des fuites de données sensibles ?",
+                options: [
+                    "Oui",
+                    "Non"
+                ],
+                answer: 0
+            },
+            {
+                question: "Quelles techniques peuvent aider à prévenir les SSRF ?",
+                options: [
+                    "Validation et assainissement des entrées utilisateur",
+                    "Mise en place de listes blanches pour les URL autorisées",
+                    "Limitation des schémas d'URL autorisés",
+                    "Toutes les réponses ci-dessus"
+                ],
+                answer: 3
+            },
+            {
+                question: "Les SSRF sont-ils spécifiques à un langage de programmation ?",
+                options: [
+                    "Oui, seulement en PHP",
+                    "Oui, seulement en Java",
+                    "Non, ils peuvent affecter diverses technologies web",
+                    "Oui, seulement en Python"
+                ],
+                answer: 2
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz');
+        const scoreContainer = document.getElementById('score');
+        let score = 0;
+
+        function buildQuiz() {
+            const output = [];
+            quizData.forEach((question, questionNumber) => {
+                const options = [];
+                for (let i = 0; i < question.options.length; i++) {
+                    options.push(
+                        `<div class="option">
+                            <input type="radio" name="question${questionNumber}" value="${i}" onclick="updateScore()">
+                            ${question.options[i]}
+                        </div>`
+                    );
+                }
+                output.push(
+                    `<div class="question">
+                        <p>${questionNumber + 1}. ${question.question}</p>
+                        <div class="options">${options.join('')}</div>
+                    </div>`
+                );
+            });
+            quizContainer.innerHTML = output.join('');
+        }
+
+        function updateScore() {
+            const answerContainers = quizContainer.querySelectorAll('.question');
+            score = 0;
+            quizData.forEach((question, questionNumber) => {
+                const answerContainer = answerContainers[questionNumber];
+                const selector = `input[name=question${questionNumber}]:checked`;
+                const userAnswer = parseInt(answerContainer.querySelector(selector)?.value);
+                if (userAnswer === question.answer) {
+                    score++;
+                }
+            });
+            scoreContainer.innerHTML = `Votre score : ${score} sur ${quizData.length}`;
+        }
+
+        buildQuiz();
+    </script>
+</body>
+</html>

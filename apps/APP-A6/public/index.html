@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstration OWASP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .pull-request {
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .correct {
+            background-color: #d4edda;
+            transform: scale(1.02);
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            transform: scale(1.02);
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background-color: #e2e3e5;
+        }
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .result {
+            font-size: 1.2em;
+            margin-top: 15px;
+        }
+        .animated-text {
+            animation: pulse 1.5s infinite;
+            color: #28a745;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        /* Animation pour les transitions */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>A06:2021-Vulnerable and Outdated Components</h1>
+        <h2>Évaluation de la Criticité : Analyse des Composants</h2>
+    </div>
+
+    <div class="score-board">
+        <div>Pull Requests évaluées : <span id="currentIndex">0</span>/30</div>
+        <div class="score">Score : <span id="score">0</span></div>
+    </div>
+
+    <div id="pullRequestPanel">
+        <h2>Pull Request Actuelle</h2>
+        <div id="pullRequest" class="pull-request fade-in">
+            <!-- Contenu dynamique généré ici -->
+        </div>
+        <button onclick="evaluatePullRequest(true)">Critique</button>
+        <button onclick="evaluatePullRequest(false)">Non Critique</button>
+    </div>
+
+    <div id="resultPanel" class="hidden">
+        <div id="resultMessage" class="result"></div>
+        <button onclick="nextPullRequest()">Prochaine Pull Request</button>
+    </div>
+
+    <script>
+        const pullRequests = [
+            { title: "Mise à jour de `log4j` (v2.14.1 -> v2.17.1)", description: "Corrige la vulnérabilité critique `CVE-2021-44228` (Log4Shell).", critical: true },
+            { title: "Optimisation du CSS pour améliorer les performances du rendu", description: "Impact limité au style visuel, améliore la rapidité de chargement des pages.", critical: false },
+            { title: "Ajout de `axios` pour la gestion des requêtes HTTP", description: "Remplace la bibliothèque obsolète `request`, améliore la maintenance et la sécurité.", critical: false },
+            { title: "Mise à jour de `OpenSSL` (v1.0.2 -> v1.1.1)", description: "Corrige des vulnérabilités majeures et ajoute le support des protocoles TLS 1.3.", critical: true },
+            { title: "Suppression de `moment.js`", description: "Réduit les dépendances obsolètes, remplacé par `date-fns` pour une meilleure performance.", critical: false },
+            { title: "Ajout de `eslint` et de règles strictes pour le linting", description: "Améliore la qualité du code et réduit les erreurs potentielles.", critical: false },
+            { title: "Mise à jour de `Apache Tomcat` (v9.0.45 -> v10.0.10)", description: "Corrige plusieurs failles de sécurité critiques et améliore la compatibilité avec Jakarta EE 9.", critical: true },
+            { title: "Réduction de la taille des images Docker utilisées pour le déploiement", description: "Optimisation des temps de build et de déploiement sans impact sur la sécurité.", critical: false },
+            { title: "Migration de la base de données MySQL vers PostgreSQL", description: "Impact potentiellement élevé sur la compatibilité et les performances, nécessite des tests approfondis.", critical: true },
+            { title: "Mise à jour de `react` (v16.13.1 -> v17.0.2)", description: "Améliore les performances et ajoute des fonctionnalités sans correction critique de sécurité.", critical: false },
+            { title: "Mise à jour de `Spring Boot` (v2.3.3 -> v2.4.5)", description: "Corrige plusieurs vulnérabilités, notamment liées aux injections via des fichiers YAML.", critical: true },
+            { title: "Ajout d'une gestion des erreurs détaillées pour l'API", description: "Améliore l'expérience utilisateur sans introduire de dépendance critique.", critical: false },
+            { title: "Mise à jour de `jQuery` (v3.4.1 -> v3.5.0)", description: "Corrige une faille de sécurité (CVE-2020-11022) permettant des attaques XSS.", critical: true },
+            { title: "Suppression des dépendances inutilisées dans le fichier `package.json`", description: "Réduit la surface d'attaque potentielle en supprimant les composants inutiles.", critical: false },
+            { title: "Migration de l'infrastructure CI/CD de Jenkins vers GitHub Actions", description: "Améliore l'automatisation mais nécessite une vérification de la configuration pour éviter des fuites potentielles.", critical: true },
+            { title: "Ajout de tests unitaires pour le module d'authentification", description: "Améliore la couverture de tests sans impact direct sur la sécurité.", critical: false },
+            { title: "Mise à jour de `npm` vers la dernière version", description: "Corrige une vulnérabilité critique dans la gestion des dépendances transitoires.", critical: true },
+            { title: "Amélioration des messages d'erreur dans les formulaires utilisateur", description: "Aucune modification fonctionnelle ou dépendance introduite.", critical: false },
+            { title: "Ajout d'une dépendance à `helmet`", description: "Renforce la sécurité des en-têtes HTTP pour les réponses du serveur.", critical: false },
+            { title: "Mise à jour de `Node.js` (v12 -> v14)", description: "Ajoute des améliorations de performance et corrige des vulnérabilités connues.", critical: true },
+            { title: "Refactoring du module de paiement pour améliorer la lisibilité", description: "Aucune modification fonctionnelle, améliore la maintenabilité du code.", critical: false },
+            { title: "Ajout de `webpack` pour le bundling des assets", description: "Améliore les performances de chargement des ressources front-end.", critical: false },
+            { title: "Mise à jour de `Django` (v3.1 -> v3.2)", description: "Corrige des vulnérabilités liées à la gestion des sessions et à la sécurité CSRF.", critical: true },
+            { title: "Suppression du support pour les navigateurs obsolètes", description: "Simplifie le code en retirant les polyfills et les tests pour les anciens navigateurs.", critical: false },
+            { title: "Ajout de `prettier` pour le formatage automatique du code", description: "Améliore la cohérence du code sans impact sur la sécurité ou les fonctionnalités.", critical: false },
+            { title: "Mise à jour de `Ruby on Rails` (v6.0.3 -> v6.1.4)", description: "Corrige des vulnérabilités critiques et améliore les performances du framework.", critical: true },
+            { title: "Ajout de la compatibilité avec l'authentification OAuth2", description: "Améliore la sécurité en permettant l'authentification via des fournisseurs tiers.", critical: true },
+            { title: "Optimisation des requêtes SQL pour réduire la charge serveur", description: "Améliore les performances sans modifier les fonctionnalités existantes.", critical: false },
+            { title: "Migration vers TypeScript pour un typage statique", description: "Améliore la robustesse du code et réduit les erreurs potentielles.", critical: false },
+            { title: "Mise à jour de `Flask` (v1.1.2 -> v2.0.1)", description: "Corrige des vulnérabilités liées à la gestion des sessions et à la sécurisation des cookies.", critical: true },
+            { title: "Ajout de la gestion des rôles utilisateurs", description: "Améliore la sécurité en permettant des permissions granulaires sans introduire de nouvelles dépendances.", critical: false },
+            { title: "Mise à jour de `Elasticsearch` (v7.10 -> v7.15)", description: "Corrige des vulnérabilités critiques et améliore la stabilité du moteur de recherche.", critical: true },
+            { title: "Ajout de la compression GZIP pour les réponses HTTP", description: "Améliore les performances en réduisant la taille des réponses sans impact sur la sécurité.", critical: false },
+            { title: "Mise à jour de `Symfony` (v4.4 -> v5.2)", description: "Corrige des vulnérabilités et ajoute de nouvelles fonctionnalités au framework.", critical: true },
+            { title: "Suppression des logs sensibles dans l'environnement de production", description: "Améliore la sécurité en évitant la fuite d'informations sensibles sans modifier les dépendances.", critical: false },
+            { title: "Ajout de `Redux` pour la gestion d'état dans l'application front-end", description: "Améliore la maintenabilité et la scalabilité de l'application sans impact sur la sécurité.", critical: false },
+            { title: "Mise à jour de `ASP.NET Core` (v3.1 -> v5.0)", description: "Corrige des vulnérabilités critiques et améliore les performances du framework.", critical: true },
+            { title: "Ajout de la journalisation centralisée avec `Logstash`", description: "Améliore la gestion des logs sans introduire de vulnérabilités supplémentaires.", critical: false }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+
+        function renderPullRequest() {
+            if (currentIndex >= pullRequests.length) return;
+
+            const pullRequest = pullRequests[currentIndex];
+            const pullRequestDiv = document.getElementById("pullRequest");
+            pullRequestDiv.innerHTML = `
+                <h3>${pullRequest.title}</h3>
+                <p>${pullRequest.description}</p>
+            `;
+            pullRequestDiv.classList.add("fade-in");
+            document.getElementById("pullRequestPanel").classList.remove("hidden");
+            document.getElementById("resultPanel").classList.add("hidden");
+            document.getElementById("currentIndex").textContent = currentIndex + 1;
+        }
+
+        function evaluatePullRequest(isCritical) {
+            const pullRequest = pullRequests[currentIndex];
+            const pullRequestDiv = document.getElementById("pullRequest");
+            const resultMessage = document.getElementById("resultMessage");
+
+            if (pullRequest.critical === isCritical) {
+                resultMessage.textContent = "Bonne réponse !";
+                pullRequestDiv.classList.add("correct");
+                score++;
+            } else {
+                resultMessage.textContent = `Mauvaise réponse ! La criticité était ${pullRequest.critical ? "critique" : "non critique"}.`;
+                pullRequestDiv.classList.add("incorrect");
+            }
+
+            document.getElementById("score").textContent = score;
+            document.getElementById("pullRequestPanel").classList.add("hidden");
+            document.getElementById("resultPanel").classList.remove("hidden");
+
+            setTimeout(() => {
+                pullRequestDiv.classList.remove("correct", "incorrect", "fade-in");
+            }, 1000);
+        }
+
+        function nextPullRequest() {
+            currentIndex++;
+            if (currentIndex < pullRequests.length) {
+                renderPullRequest();
+            } else {
+                document.getElementById("pullRequestPanel").classList.add("hidden");
+                document.getElementById("resultPanel").innerHTML = `
+                    <h2>Simulation Terminée</h2>
+                    <p>Votre score final est de <span class="animated-text">${score}/${pullRequests.length}</span></p>
+                `;
+                document.getElementById("resultPanel").classList.remove("hidden");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderPullRequest();
+        });
+    </script>
+</body>
+</html>
+

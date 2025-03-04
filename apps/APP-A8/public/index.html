@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intégrité des Données et Logiciels</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .step {
+            display: none;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 15px 0;
+            background: white;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .step.active {
+            display: block;
+        }
+        .step.completed {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.05);
+        }
+        button {
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 0 0;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        textarea {
+            font-family: monospace;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            resize: vertical;
+            width: 100%;
+        }
+        .terminal {
+            min-height: 100px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            overflow-y: auto;
+            max-height: 300px;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            font-family: monospace;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .validation {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+        }
+        .validation.success {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+        }
+        .validation.error {
+            background: #FFEBEE;
+            border: 1px solid #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Intégrité des Données et Logiciels</h1>
+    </div>
+
+    <!-- Étape 1 -->
+    <div class="step active" id="step1">
+        <h2>Étape 1: Vérification des Dépendances</h2>
+        <p>Apprenez à sécuriser vos dépendances et à vérifier l'intégrité des packages.</p>
+        <h3>Code Vulnérable :</h3>
+        <pre>
+{
+  "dependencies": {
+    "express": "4.17.1"
+  },
+  "scripts": {
+    "preinstall": "npm install", 
+    "prepare": "husky install"
+  }
+}
+        </pre>
+        <h3>Code Sécurisé :</h3>
+        <pre>
+{
+  "dependencies": {
+    "express": "4.17.1"
+  },
+  "scripts": {
+    "preinstall": "npm ci && npm audit", 
+    "prepare": "husky install"
+  }
+}
+        </pre>
+        <button onclick="nextStep(1)">Compris</button>
+    </div>
+
+    <!-- Étape 2 -->
+    <div class="step" id="step2">
+        <h2>Étape 2: Validation des Données Sérialisées</h2>
+        <p>Sécurisez la désérialisation des données non fiables.</p>
+        <h3>Code Vulnérable :</h3>
+        <pre>
+// Code vulnérable
+const user = JSON.parse(userInput);
+processUser(user);
+        </pre>
+        <h3>Code Sécurisé :</h3>
+        <pre>
+// Code sécurisé 
+import Joi from 'joi';
+
+const schema = Joi.object({
+    name: Joi.string().required(),
+    age: Joi.number().integer().min(0).max(120)
+});
+
+try {
+    const user = JSON.parse(userInput);
+    const { error, value } = schema.validate(user);
+    if (error) throw new Error("Invalid data");
+    processUser(value);
+} catch (err) {
+    console.error("Validation failed:", err);
+}
+        </pre>
+        <button onclick="nextStep(2)">Suivant</button>
+    </div>
+
+    <!-- Étape 3 -->  
+    <div class="step" id="step3">
+        <h2>Étape 3: Intégrité du Pipeline CI/CD</h2>
+        <p>Sécurisez votre pipeline de déploiement avec des signatures et des vérifications.</p>
+        <h3>Code Vulnérable :</h3>
+        <pre>
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [ main ] 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Dependencies
+        run: npm install
+      - name: Deploy
+        run: |
+          npm run build
+          scp -r ./dist user@192.168.1.100:/var/www
+        </pre>
+        <h3>Code Sécurisé :</h3>
+        <pre>
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest  
+    steps:
+      - uses: actions/checkout@v3
+      - name: Verify dependencies
+        run: |  
+          npm ci
+          npm audit
+      - name: Build and sign
+        run: |
+          npm run build
+          gpg --import ${{ secrets.GPG_PRIVATE_KEY }} 
+          find dist -type f -print0 | xargs -0 gpg --detach-sign --armor  
+      - name: Deploy
+        env:
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}  
+        run: |
+          mkdir ~/.ssh && echo "$SSH_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          rsync -avz -e "ssh -i $SSH_KEY" dist/ user@secure-server:/var/www
+      - name: Verify deployment  
+        run: ssh user@secure-server 'gpg --verify /var/www/dist/*'
+        </pre>
+        <button onclick="nextStep(3)">Compris</button>
+    </div>
+
+    <!-- Étape 4 -->
+    <div class="step" id="step4">
+        <h2>Étape 4: Construisez un Pipeline CI/CD Sécurisé</h2>
+        <p>Sélectionnez les bonnes options pour sécuriser votre pipeline CI/CD.</p>
+
+        <h3>1. Comment cloner le dépôt ?</h3>
+        <button onclick="selectAction('clone', 'git clone http://example.com/repo.git')">HTTP (Non sécurisé)</button>  
+        <button onclick="selectAction('clone', 'git clone https://example.com/repo.git')">HTTPS</button>
+        <button onclick="selectAction('clone', 'actions/checkout@v3')">Action Checkout (Recommandé)</button>
+
+        <h3>2. Comment installer les dépendances ?</h3>
+        <button onclick="selectAction('install', 'npm install')">npm install</button>
+        <button onclick="selectAction('install', 'npm ci')">npm ci (Recommandé)</button>
+
+        <h3>3. Vérifiez les vulnérabilités</h3> 
+        <button onclick="selectAction('audit', 'Aucune action')">Ne rien faire</button>
+        <button onclick="selectAction('audit', 'npm audit')">npm audit (Recommandé)</button>
+
+        <h3>4. Méthode de déploiement</h3>
+        <button onclick="selectAction('deploy', 'scp -r ./build user@192.168.1.100:/var/www')">SCP (Non sécurisé)</button>
+        <button onclick="selectAction('deploy', 'rsync -avz -e \'ssh -i $SSH_KEY\' ./build user@secure-server:/var/www')">rsync avec SSH key (Recommandé)</button>  
+
+        <button style="margin-top: 20px;" onclick="generatePipeline()">Générer le Pipeline</button>
+    </div>
+
+    <!-- Étape Générée -->
+    <div class="step" id="generatedStep">
+        <h2>Pipeline Généré</h2>  
+        <p>Voici le pipeline que vous avez construit :</p>
+        <pre id="generatedPipeline" class="terminal"></pre>
+        <button onclick="validatePipeline()">Vérifier le Pipeline</button>
+        <div id="pipelineFeedback" class="validation"></div>  
+    </div>
+
+    <!-- Étape Finale -->
+    <div class="step" id="end">
+        <h2>Résumé de la Validation</h2>
+        <div id="validationSummary"></div>
+        <button onclick="restartExercise()">Recommencer l'Exercice</button>
+    </div>
+
+    <script>
+        const pipeline = {
+            clone: '',
+            install: '',
+            audit: '', 
+            deploy: ''
+        };
+
+        function nextStep(currentStep) {
+            const current = document.getElementById(`step${currentStep}`);
+            current.classList.add('completed');
+            current.classList.remove('active');
+            const next = document.getElementById(`step${currentStep + 1}`);
+            if (next) next.classList.add('active');
+        }
+
+        function selectAction(step, action) {
+            pipeline[step] = action;
+            alert(`Action sélectionnée pour "${step}": ${action}`);  
+        }
+
+        function generatePipeline() {
+            const generatedPipeline = `  
+name: Build and Deploy Pipeline
+on:
+  push:  
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:  
+      - name: Clone Repository
+        ${getCloneStep()}
+      - name: Install Dependencies
+        run: ${pipeline.install || 'Non spécifié'}
+      - name: Audit Dependencies
+        ${getAuditStep()}  
+      - name: Build and sign Artifacts
+        ${getSignArtifactsStep()}
+      - name: Deploy
+        env:
+          SSH_KEY: \${{ secrets.SERVER_SSH_KEY }}
+        run: ${getDeployStep()}
+      - name: Verify Deployment
+        run: ssh user@secure-server 'gpg --verify /var/www/dist/*'
+            `.trim();
+
+            document.getElementById('generatedPipeline').textContent = generatedPipeline;
+            document.getElementById('step4').classList.remove('active');
+            document.getElementById('generatedStep').classList.add('active');
+        }
+
+        function getCloneStep() {
+            if (pipeline.clone === 'actions/checkout@v3') {
+                return `uses: actions/checkout@v3`;
+            } else if (pipeline.clone.startsWith('git clone')) {
+                return `run: ${pipeline.clone}`;  
+            } else {
+                return `run: Non spécifié`;
+            }
+        }
+
+        function getAuditStep() {
+            if (pipeline.audit === 'npm audit') {
+                return `run: npm audit`; 
+            } else {
+                return `run: Aucune action`;
+            }
+        }
+
+        function getSignArtifactsStep() {
+            if (pipeline.audit === 'npm audit') {
+                return `run: |
+      npm run build  
+      gpg --import \${{ secrets.GPG_PRIVATE_KEY }}
+      find dist -type f -print0 | xargs -0 gpg --detach-sign --armor`;
+            } else {
+                return `run: npm run build`; 
+            }
+        }
+
+        function getDeployStep() {
+            if (pipeline.deploy.startsWith('rsync')) {
+                return `|
+      mkdir ~/.ssh && echo "$SSH_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+      ${pipeline.deploy}`;
+            } else if (pipeline.deploy.startsWith('scp')) {
+                return pipeline.deploy;
+            } else {
+                return 'Non spécifié';
+            }
+        }
+
+        function validatePipeline() {
+            const feedback = document.getElementById('pipelineFeedback');
+            const summary = document.getElementById('validationSummary');
+            feedback.innerHTML = '';
+            summary.innerHTML = '';
+
+            const userPipeline = document.getElementById('generatedPipeline').textContent;
+
+            const checks = [
+                { test: /actions\/checkout@v3/, message: "Utilisation de 'actions/checkout@v3' pour cloner le dépôt." },
+                { test: /npm ci/, message: "Utilisation de 'npm ci' pour une installation propre des dépendances." },
+                { test: /npm audit/, message: "Ajout de 'npm audit' pour vérifier les vulnérabilités." },
+                { test: /find\s+dist.*gpg\s+--detach-sign\s+--armor/, message: "Ajout d'une étape pour signer les artefacts avec GPG." },
+                { test: /SSH_KEY:\s*\$\{\{ secrets\.SERVER_SSH_KEY \}\}/, message: "Déclaration de la variable d'environnement SSH_KEY." },
+                { test: /rsync\s+-avz\s+-e\s+['"]ssh\s+-i\s+\$SSH_KEY['"]/, message: "Utilisation de 'rsync' avec SSH key pour sécuriser le déploiement." },
+                { test: /ssh\s+user@secure-server\s+'gpg\s+--verify/, message: "Vérification des signatures après déploiement." }
+            ];  
+
+            const errors = [];
+
+            checks.forEach(check => {
+                if (check.test.test(userPipeline)) {
+                    feedback.innerHTML += `<p class="success">✅ ${check.message}</p>`;
+                    summary.innerHTML += `<p class="success">✅ ${check.message}</p>`;
+                } else {
+                    feedback.innerHTML += `<p class="error">❌ ${check.message}</p>`;
+                    summary.innerHTML += `<p class="error">❌ ${check.message}</p>`;
+                    errors.push(check.message);
+                }
+            });
+
+            if (errors.length === 0) {
+                feedback.classList.remove('error');
+                feedback.classList.add('success');
+                feedback.innerHTML += '<p class="success">🎉 Votre pipeline est sécurisé et complet !</p>';
+            } else {
+                feedback.classList.remove('success');
+                feedback.classList.add('error');
+                feedback.innerHTML += '<p class="error">⚠️ Veuillez corriger les éléments ci-dessus pour sécuriser complètement votre pipeline.</p>';
+            }
+
+            // Move to final step
+            document.getElementById('generatedStep').classList.remove('active');
+            document.getElementById('end').classList.add('active');
+        }
+
+        function restartExercise() {
+            // Reset pipeline selections
+            pipeline.clone = '';
+            pipeline.install = '';
+            pipeline.audit = '';
+            pipeline.deploy = '';
+
+            // Reset UI
+            const steps = document.querySelectorAll('.step');
+            steps.forEach(step => {
+                step.classList.remove('completed', 'active');
+            });
+            document.getElementById('step1').classList.add('active');
+        }
+    </script>
+</body>
+</html>
+

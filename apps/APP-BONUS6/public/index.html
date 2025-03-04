@@ -1,0 +1,1008 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>OWASP A01:2021 - Défis de Sécurité Web</title>
+    <style>
+        /* Styles communs */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            line-height: 1.6;
+        }
+        .dialog-box, .guide, .shop-form, .item-card, .success, .error, 
+        .budget-display, .code-example, #required-items, #glossary, 
+        .race-simulation-container, .session-container, .price-container {
+            /* Common styles from all applications */
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .dialog-box {
+            background-color: white;
+        }
+        .character {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .thomas { color: #2c5282; }
+        .marc { color: #744210; }
+        .prof { color: #2c5282; }
+        .choice-button, .race-choice-button, .price-choice-button {
+            background-color: #4a5568;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .choice-button:hover:not(:disabled),
+        .race-choice-button:hover:not(:disabled),
+        .price-choice-button:hover:not(:disabled) {
+            background-color: #2d3748;
+            transform: translateY(-2px);
+        }
+        .choice-button:disabled,
+        .race-choice-button:disabled,
+        .price-choice-button:disabled {
+            background-color: #cbd5e0;
+            color: #718096;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .hint {
+            background-color: #4a5568;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        /* Styles spécifiques au jeu de rejeu de session */
+        .session-server-panel {
+            background: #1a1a1a;
+            color: #33ff33;
+            font-family: monospace;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .session-client-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .session-cookie-info {
+            background: #2d3748;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        /* Styles spécifiques au jeu de condition de course */
+        .race-simulation-container h2, 
+        .race-simulation-container h3 {
+            color: #2c5282;
+        }
+        .race-message-area p, .race-message-area div.warning {
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .race-message-area p.success {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .race-message-area p.error {
+            background-color: #fed7d7;
+            color: #9b2c2c;
+        }
+        .race-message-area div.warning {
+            background-color: #fefcbf;
+            color: #975a16;
+        }
+        /* Styles pour le bouton d'explications */
+        #toggleInfo {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #2c5282;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1000;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        /* Styles pour le glossaire */
+        #glossary {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        #glossary h3 {
+            margin-top: 0;
+        }
+        /* Styles pour les messages */
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .message.error { background: #fee; color: #c00; }
+        .message.success { background: #efe; color: #0c0; }
+        .message.info { background: #eef; color: #00c; }
+        .message.warning { background: #ffd; color: #860; }
+        /* Styles pour le e-shop */
+        .price-item-card {
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: white;
+            position: relative;
+        }
+        .price-item-card.unaffordable {
+            opacity: 0.7;
+        }
+        .price-item-card.unaffordable::after {
+            content: "Budget insuffisant";
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            color: #e53e3e;
+            font-size: 14px;
+        }
+        .budget-display {
+            background-color: #ebf8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #4299e1;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .price-tag {
+            display: inline-block;
+            background-color: #edf2f7;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .progress-bar {
+            background-color: #edf2f7;
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background-color: #4299e1;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        /* Masquer les éléments par défaut */
+        .hidden { display: none; }
+    </style>
+</head>
+<body onload="startGame()">
+    <h1>🔐 Défis de Sécurité Web - E-Shop Vulnérable</h1>
+    <p>Note : Pour réussir ces défis, vous devrez examiner le code source de la page et utiliser les outils développeur de votre navigateur.</p>
+
+    <div id="mainContent"></div>
+
+    <button id="toggleInfo" onclick="toggleExplanations()">📚 Explications</button>
+
+    <div id="explanations" class="hidden">
+        <h2>Guide Technique</h2>
+        <p>Cette application simule une boutique en ligne avec différents défis de sécurité.</p>
+        
+        <h3>Objectif</h3>
+        <p>Votre mission est de naviguer à travers les différents scénarios de sécurité, d'identifier et d'exploiter des failles pour progresser.</p>
+
+        <h3>Scénarios Disponibles</h3>
+        <ul>
+            <li><strong>Manipulation des Prix :</strong> Exploitez la validation côté client pour ajuster les prix des produits.</li>
+            <li><strong>Rejeu de Session :</strong> Rejouez une session en manipulant les cookies pour accéder à un compte sans authentification.</li>
+            <li><strong>Condition de Course :</strong> Bypassez les contrôles de validation en envoyant plusieurs requêtes simultanées.</li>
+        </ul>
+
+        <h3>Glossaire</h3>
+        <div id="glossary">
+            <h3>Glossaire des Termes Techniques</h3>
+            <ul>
+                <li><strong>Validation côté client :</strong> Processus de vérification des données effectué dans le navigateur de l'utilisateur, généralement avec JavaScript.</li>
+                <li><strong>Validation côté serveur :</strong> Vérification des données effectuée sur le serveur, considérée comme plus sécurisée car l'utilisateur ne peut pas la manipuler directement.</li>
+                <li><strong>Vulnérabilité :</strong> Faiblesse dans un système qui peut être exploitée pour causer un préjudice ou un comportement non désiré.</li>
+                <li><strong>Contrôle d'accès inapproprié :</strong> Situation où les restrictions d'accès aux ressources ne sont pas correctement mises en œuvre, permettant à des utilisateurs non autorisés d'accéder à des données ou des fonctionnalités.</li>
+                <li><strong>Outils développeur :</strong> Ensemble d'outils intégrés dans les navigateurs modernes pour aider les développeurs à tester et déboguer les applications web.</li>
+                <li><strong>Condition de course :</strong> Situation où le comportement d'un système dépend de l'ordre ou du timing des événements, souvent exploitable pour contourner les contrôles.</li>
+            </ul>
+        </div>
+
+        <h3>Liens Utiles</h3>
+        <ul>
+            <li><a href="https://owasp.org/Top10/fr/A01_2021-Broken_Access_Control/" target="_blank">OWASP Top 10 - Contrôle d'Accès Inapproprié</a></li>
+            <li><a href="https://developer.mozilla.org/fr/docs/Tools" target="_blank">Outils de développement Firefox</a></li>
+            <li><a href="https://developer.chrome.com/docs/devtools/" target="_blank">Outils de développement Chrome</a></li>
+        </ul>
+
+        <h3>Code Exemple Vulnérable</h3>
+        <div class="code-example">
+            // Extrait de code vulnérable
+            const products = [
+                { id: "ARD01", name: "Arduino UNO", price: 25.00 },
+                // ...
+            ];
+
+            function validatePurchase() {
+                let totalPrice = 0;
+                cart.forEach(item => {
+                    totalPrice += item.price;
+                });
+                if (totalPrice <= currentBudget) {
+                    // Autoriser l'achat
+                } else {
+                    // Rejeter l'achat
+                }
+            }
+        </div>
+
+        <h3>Code Exemple Sécurisé</h3>
+        <div class="code-example">
+            // Extrait de code sécurisé
+            async function validatePurchase() {
+                let isValid = true;
+                for (let item of cart) {
+                    const serverPrice = await API.getPrice(item.productId);
+                    if (serverPrice !== item.price) {
+                        isValid = false;
+                        break;
+                    }
+                }
+                if (isValid) {
+                    // Autoriser l'achat
+                } else {
+                    // Rejeter l'achat
+                }
+            }
+        </div>
+    </div>
+
+    <script>
+        /* -------------------- Gestion des Scénarios Globaux -------------------- */
+
+        // Variables globales pour l'histoire
+        let currentStory = {
+            scenario: 'intro',
+            step: 0
+        };
+
+        // Données des scénarios
+        const stories = {
+            intro: {
+                title: "Introduction",
+                steps: [
+                    {
+                        text: "👨‍🏫 Professeur : Aujourd'hui, nous allons explorer les vulnérabilités de sécurité dans le e-commerce.",
+                        choices: ["Continuer"]
+                    },
+                    {
+                        text: "👨‍🏫 Professeur : Votre mission sera d'identifier et d'exploiter des failles de sécurité courantes.",
+                        choices: ["Je suis prêt", "En savoir plus"]
+                    }
+                ],
+                nextScenarios: ['price', 'session', 'race']
+            },
+            price: {
+                title: "Manipulation des Prix",
+                steps: [
+                    {
+                        text: "🧑‍💻 Thomas : Je dois acheter des composants électroniques, mais mon budget est limité...",
+                        choices: ["Examiner le site"]
+                    },
+                    {
+                        text: "💡 Indice : Examinez le code source de la page. Les prix sont peut-être modifiables...",
+                        choices: ["Ouvrir le e-shop", "Retour"]
+                    },
+                    {
+                        text: "", // Le e-shop sera affiché ici
+                        choices: []
+                    }
+                ]
+            },
+            session: {
+                title: "Rejeu de Session",
+                steps: [
+                    {
+                        text: "🧑‍💻 Thomas : J'ai remarqué que le site garde en mémoire les anciennes sessions...",
+                        choices: ["Examiner les sessions"]
+                    },
+                    {
+                        text: "💡 Indice : Essayez de réutiliser un jeton de session expiré.",
+                        choices: ["Réutiliser le jeton", "Retour"]
+                    },
+                    {
+                        text: "", // Le jeu de rejeu de session sera intégré ici
+                        choices: []
+                    }
+                ]
+            },
+            race: {
+                title: "Condition de Course",
+                steps: [
+                    {
+                        text: "🧑‍💻 Thomas : Le système de validation semble lent...",
+                        choices: ["Analyser le timing"]
+                    },
+                    {
+                        text: "💡 Indice : Envoyez plusieurs requêtes simultanées pour bypasser les contrôles.",
+                        choices: ["Lancer une attaque", "Retour"]
+                    },
+                    {
+                        text: "", // Le jeu de condition de course sera intégré ici
+                        choices: []
+                    }
+                ]
+            }
+        };
+
+        function startGame() {
+            showStory('intro', 0);
+        }
+
+        function showStory(scenario, step) {
+            currentStory.scenario = scenario;
+            currentStory.step = step;
+
+            const story = stories[scenario];
+            const currentStep = story.steps[step];
+
+            let content = `<div class="story-container">
+                            <h2>${story.title}</h2>
+                            <div class="dialog-box">
+                                <p>${currentStep.text}</p>
+                            </div>
+                            <div class="choices">`;
+
+            currentStep.choices.forEach((choice, index) => {
+                content += `<button class="choice-button" onclick="makeChoice('${scenario}', ${step}, ${index})">${choice}</button>`;
+            });
+
+            content += `</div></div>`;
+            document.getElementById('mainContent').innerHTML = content;
+
+            // Afficher le e-shop si nécessaire
+            if (scenario === 'price' && step === 2) {
+                showPriceManipulation();
+            }
+
+            // Afficher le jeu de rejeu de session si nécessaire
+            if (scenario === 'session' && step === 2) {
+                showSessionReplay();
+            }
+
+            // Afficher le jeu de condition de course si nécessaire
+            if (scenario === 'race' && step === 2) {
+                showRaceConditionSimulation();
+            }
+        }
+
+        function makeChoice(scenario, step, choiceIndex) {
+            const currentStep = stories[scenario].steps[step];
+            const choice = currentStep.choices[choiceIndex];
+
+            if (choice === "Retour" || choice === "Retour au menu principal") {
+                showScenarioChoice(['price', 'session', 'race']);
+                return;
+            }
+
+            if (choice === "Ouvrir le e-shop") {
+                showStory(scenario, step + 1);
+                return;
+            }
+
+            if (choice === "Réutiliser le jeton") {
+                showStory(scenario, step + 1);
+                return;
+            }
+
+            if (choice === "Examiner le site" || choice === "Examiner les sessions" || choice === "Analyser le timing") {
+                showStory(scenario, step + 1);
+                return;
+            }
+
+            if (choice === "Lancer une attaque") {
+                showStory(scenario, step + 1);
+                return;
+            }
+
+            // Avancer dans le scénario
+            if (step < stories[scenario].steps.length - 1) {
+                showStory(scenario, step + 1);
+            } else {
+                // Si le scénario est terminé, retourner au choix de scénario
+                showScenarioChoice(['price', 'session', 'race']);
+            }
+        }
+
+        function showScenarioChoice(scenarios) {
+            let content = `<div class="story-container">
+                            <h2>Choisissez votre défi</h2>
+                            <div class="choices">`;
+
+            scenarios.forEach(scenario => {
+                content += `<button class="choice-button" onclick="showStory('${scenario}', 0)">
+                            ${stories[scenario].title}
+                           </button>`;
+            });
+
+            content += `</div></div>`;
+            document.getElementById('mainContent').innerHTML = content;
+        }
+
+        function toggleExplanations() {
+            const explanations = document.getElementById('explanations');
+            explanations.classList.toggle('hidden');
+            if (!explanations.classList.contains('hidden')) {
+                explanations.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        /* -------------------- Intégration du Jeu de Rejeu de Session -------------------- */
+
+        // Variables et constantes pour le jeu de rejeu de session
+        const session_VALID_CREDENTIALS = { username: 'user', password: 'pass' };
+        const session_AUTO_LOGOUT_TIME = 60; // en secondes
+        const session_COOKIE_NAME = 'sessionId';
+
+        // Fonction pour charger les sessions actives depuis localStorage
+        function session_loadActiveSessions() {
+            const sessions = localStorage.getItem('session_active');
+            if (sessions) {
+                return new Set(JSON.parse(sessions));
+            }
+            return new Set();
+        }
+
+        // Fonction pour sauvegarder les sessions actives dans localStorage
+        function session_saveActiveSessions(activeSessions) {
+            localStorage.setItem('session_active', JSON.stringify(Array.from(activeSessions)));
+        }
+
+        // Initialiser les sessions actives
+        let session_activeSessions = session_loadActiveSessions();
+
+        function showSessionReplay() {
+            const sessionContent = `
+                <div class="session-container">
+                    <h3>Rejeu de Session</h3>
+                    
+                    <div class="guide">
+                        <h4>Guide Pratique</h4>
+                        <div class="step">1. Connectez-vous avec user/pass</div>
+                        <div class="step">2. Dans les DevTools (F12) > Application > Cookies</div>
+                        <div class="step">3. Copiez la valeur du cookie 'sessionId'</div>
+                        <div class="step">4. Déconnectez-vous</div>
+                        <div class="step">5. Recréez le cookie avec la valeur copiée</div>
+                        <div class="step">6. Actualisez la page</div>
+                    </div>
+
+                    <div id="session-login-form" class="session-client-panel">
+                        <h4>Connexion E-Banking</h4>
+                        <input type="text" id="session-username" placeholder="Nom d'utilisateur" />
+                        <input type="password" id="session-password" placeholder="Mot de passe" />
+                        <button class="session-choice-button choice-button" onclick="session_login()">Connexion</button>
+                    </div>
+
+                    <div id="session-server-status" class="session-server-panel hidden">
+                        <div>Status Serveur</div>
+                        <div id="session-server-log"></div>
+                    </div>
+
+                    <div id="session-panel" class="hidden">
+                        <div class="session-cookie-info">
+                            Cookie actuel: <span id="session-current-cookie">-</span>
+                            <button class="choice-button" onclick="session_showCookieExplanation()">Comment utiliser ce cookie?</button>
+                        </div>
+                        <div class="session-client-panel">
+                            <h4>Compte Bancaire</h4>
+                            <p>Solde: 1337€</p>
+                            <p>Session expire dans: <span id="session-logoutTimer">-</span></p>
+                            <button class="choice-button" onclick="session_logout()">Déconnexion</button>
+                        </div>
+                    </div>
+
+                    <div id="session-cookie-explanation" class="guide hidden">
+                        <h4>Pour réutiliser ce cookie :</h4>
+                        <ol>
+                            <li>Ouvrez les DevTools (F12)</li>
+                            <li>Allez dans l'onglet "Application" > "Cookies"</li>
+                            <li>Trouvez le cookie "sessionId"</li>
+                            <li>Double-cliquez sur sa valeur pour la copier</li>
+                            <li>Après déconnexion, créez un nouveau cookie "sessionId"</li>
+                            <li>Collez l'ancienne valeur et appuyez sur Entrée</li>
+                            <li>Actualisez la page</li>
+                        </ol>
+                    </div>
+
+                    <div id="session-messages"></div>
+                </div>
+            `;
+            document.getElementById('mainContent').innerHTML = sessionContent;
+            session_logToServer('Serveur démarré');
+            session_checkSession();
+        }
+
+        function session_login() {
+            const username = document.getElementById('session-username').value;
+            const password = document.getElementById('session-password').value;
+
+            if (username !== session_VALID_CREDENTIALS.username || 
+                password !== session_VALID_CREDENTIALS.password) {
+                session_showMessage('error', '❌ Identifiants invalides');
+                return;
+            }
+
+            const sessionId = session_generateSessionId();
+            session_activeSessions.add(sessionId);
+            session_saveActiveSessions(session_activeSessions);
+            
+            session_setCookie(session_COOKIE_NAME, sessionId, 1);
+            session_startSession(sessionId);
+            
+            session_logToServer(`Nouvelle session créée: ${sessionId}`);
+            session_logToServer(`Sessions actives: ${Array.from(session_activeSessions).join(', ')}`);
+        }
+
+        function session_startSession(sessionId) {
+            document.getElementById('session-login-form').classList.add('hidden');
+            document.getElementById('session-panel').classList.remove('hidden');
+            document.getElementById('session-server-status').classList.remove('hidden');
+            document.getElementById('session-current-cookie').textContent = sessionId;
+            
+            session_showMessage('success', '✅ Connexion réussie');
+            session_startLogoutTimer();
+        }
+
+        function session_logout() {
+            const sessionId = session_getCookie(session_COOKIE_NAME);
+            if (sessionId) {
+                // **Ne pas supprimer la session du localStorage pour permettre le Rejeu de Session**
+                session_deleteCookie(session_COOKIE_NAME);
+                session_endSession('Déconnexion manuelle');
+            }
+        }
+
+        function session_endSession(reason) {
+            document.getElementById('session-login-form').classList.remove('hidden');
+            document.getElementById('session-panel').classList.add('hidden');
+            session_showMessage('info', `ℹ️ Session terminée: ${reason}`);
+            session_logToServer(`Session terminée (${reason})`);
+        }
+
+        function session_checkSession() {
+            const sessionId = session_getCookie(session_COOKIE_NAME);
+            if (!sessionId) return false;
+
+            if (session_activeSessions.has(sessionId)) {
+                // **Reconnaître la session même après déconnexion si le cookie est recréé**
+                session_startSession(sessionId);
+                session_showMessage('success', '🎉 Session reconnue grâce au cookie recréé.');
+                session_logToServer(`Session reconnue: ${sessionId}`);
+                return true;
+            }
+            return false;
+        }
+
+        function session_setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+        }
+
+        function session_getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function session_deleteCookie(name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        }
+
+        function session_startLogoutTimer() {
+            let timeLeft = session_AUTO_LOGOUT_TIME;
+            session_updateTimer(timeLeft);
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                session_updateTimer(timeLeft);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    session_logout();
+                }
+            }, 1000);
+        }
+
+        function session_updateTimer(seconds) {
+            document.getElementById('session-logoutTimer').textContent = `${seconds}s`;
+        }
+
+        function session_generateSessionId() {
+            return 'sess_' + Math.random().toString(36).substring(2, 15);
+        }
+
+        function session_showMessage(type, text) {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            const messages = document.getElementById('session-messages');
+            messages.insertBefore(message, messages.firstChild);
+            if (messages.children.length > 3) {
+                messages.removeChild(messages.lastChild);
+            }
+        }
+
+        function session_showCookieExplanation() {
+            const explanation = document.getElementById('session-cookie-explanation');
+            explanation.classList.toggle('hidden');
+        }
+
+        function session_logToServer(message) {
+            const log = document.getElementById('session-server-log');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+            if (log.children.length > 4) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        /* -------------------- Fin de l'intégration du Jeu de Rejeu de Session -------------------- */
+
+        /* -------------------- Intégration du Jeu de Condition de Course -------------------- */
+
+        // Variables et constantes pour le jeu de condition de course
+        let race_initialStock = 1;
+        let race_stock = race_initialStock;
+        let race_purchaseCount = 0;
+        let race_orderConfirmations = [];
+
+        function showRaceConditionSimulation() {
+            const raceContent = `
+                <div class="race-simulation-container">
+                    <h2>Achats Simultanés</h2>
+                    <div id="race-messages" class="race-message-area">
+                        <p>Stock actuel : <span id="race-stock-amount">${race_stock}</span></p>
+                    </div>
+                    <button class="race-choice-button choice-button" onclick="race_simulatePurchase()">Acheter l'article</button>
+                    <button class="race-choice-button choice-button" onclick="race_simulateMultiplePurchases()">Acheter plusieurs fois simultanément</button>
+                    <div id="race-order-confirmations"></div>
+                </div>
+            `;
+            document.getElementById('mainContent').innerHTML = raceContent;
+            race_logMessage('Simulation démarrée');
+            race_updateStockDisplay();
+        }
+
+        function race_simulatePurchase() {
+            race_processPurchase()
+                .then(result => {
+                    race_updateStockDisplay();
+                    race_showMessage(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        race_addOrderConfirmation();
+                    }
+                });
+        }
+
+        function race_simulateMultiplePurchases() {
+            let requests = [];
+            for (let i = 0; i < 5; i++) {
+                requests.push(race_processPurchase());
+            }
+            Promise.all(requests).then(results => {
+                race_updateStockDisplay();
+                results.forEach(result => {
+                    race_showMessage(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        race_addOrderConfirmation();
+                    }
+                });
+                if (race_orderConfirmations.length > race_initialStock) {
+                    race_showRiskWarning();
+                }
+            });
+        }
+
+        function race_processPurchase() {
+            return new Promise(resolve => {
+                const checkDelay = Math.random() * 1000;
+                const processDelay = Math.random() * 1000;
+                setTimeout(() => {
+                    const currentStock = race_stock;
+                    setTimeout(() => {
+                        if (currentStock > 0) {
+                            race_stock--;
+                            race_purchaseCount++;
+                            resolve({
+                                success: true,
+                                message: "Achat réussi. Vous avez acheté " + race_purchaseCount + " article(s)."
+                            });
+                        } else {
+                            resolve({
+                                success: false,
+                                message: "Stock épuisé. Achat impossible."
+                            });
+                        }
+                    }, processDelay);
+                }, checkDelay);
+            });
+        }
+
+        function race_updateStockDisplay() {
+            document.getElementById('race-stock-amount').textContent = race_stock;
+        }
+
+        function race_showMessage(message, type) {
+            const messagesDiv = document.getElementById('race-messages');
+            const p = document.createElement('p');
+            p.textContent = message;
+            p.className = type;
+            messagesDiv.appendChild(p);
+            if (messagesDiv.children.length > 5) {
+                messagesDiv.removeChild(messagesDiv.lastChild);
+            }
+        }
+
+        function race_addOrderConfirmation() {
+            const timestamp = new Date().toLocaleString();
+            const confirmation = `Confirmation de commande n°${race_orderConfirmations.length + 1} - Date et heure : ${timestamp}`;
+            race_orderConfirmations.push(confirmation);
+            race_displayOrderConfirmations();
+        }
+
+        function race_displayOrderConfirmations() {
+            const confirmationsDiv = document.getElementById('race-order-confirmations');
+            confirmationsDiv.innerHTML = '<h3>Confirmations de Commande :</h3>';
+            race_orderConfirmations.forEach(conf => {
+                const p = document.createElement('p');
+                p.textContent = conf;
+                confirmationsDiv.appendChild(p);
+            });
+        }
+
+        function race_showRiskWarning() {
+            const messagesDiv = document.getElementById('race-messages');
+            const warning = document.createElement('div');
+            warning.className = 'warning';
+            warning.innerHTML = `Attention : Des commandes ont été confirmées alors que le stock était insuffisant. Cela expose l'entreprise à des risques contractuels, juridiques et comptables, car elle est tenue d'honorer ces commandes ou de faire face à des réclamations de la part des clients.`;
+            messagesDiv.appendChild(warning);
+        }
+
+        function race_logMessage(message) {
+            race_showMessage(`[${new Date().toLocaleTimeString()}] ${message}`, 'info');
+        }
+
+        /* -------------------- Fin de l'intégration du Jeu de Condition de Course -------------------- */
+
+        /* -------------------- Intégration du Jeu de Manipulation des Prix -------------------- */
+
+        // Variables pour le jeu de manipulation des prix
+        const price_INITIAL_BUDGET = 60.00;
+        let price_currentBudget = price_INITIAL_BUDGET;
+
+        const products = [
+            { id: "ARD01", name: "Arduino UNO", price: 25.00, required: true },
+            { id: "SENS01", name: "Capteur température", price: 15.00, required: true },
+            { id: "WIFI01", name: "Module WiFi", price: 20.00, required: true },
+            { id: "LCD01", name: "Écran LCD", price: 30.00, required: true },
+            { id: "BAT01", name: "Batterie LiPo", price: 25.00, required: true }
+        ];
+
+        const API = {
+            validatePrice: async function(item) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const serverPrice = this.prices[item.productId];
+                return serverPrice === item.price;
+            },
+            getPrice: async function(productId) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                return this.prices[productId];
+            },
+            prices: {
+                "ARD01": 25.00,
+                "SENS01": 15.00,
+                "WIFI01": 20.00,
+                "LCD01": 30.00,
+                "BAT01": 25.00
+            }
+        };
+
+        let price_cart = [];
+        let price_purchasedItems = new Set();
+
+        function showPriceManipulation() {
+            const priceContent = `
+                <div class="price-container">
+                    <div class="budget-display">
+                        <span>Budget initial: 60.00 €</span>
+                        <span>Budget restant: <span id="price-budget-amount">${price_currentBudget.toFixed(2)}</span> €</span>
+                    </div>
+
+                    <div id="price-required-items">
+                        <h3>Composants nécessaires pour le projet:</h3>
+                        <ul id="price-required-items-list"></ul>
+                        <div class="progress-bar">
+                            <div id="price-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="shop-form">
+                        <h2>Catalogue des Composants</h2>
+                        <div id="price-items-container"></div>
+                        <div id="price-cart-summary">
+                            <p>Total du panier: <span id="price-total-price">0.00</span> €</p>
+                        </div>
+                        <button class="price-choice-button choice-button" onclick="price_validatePurchase()" id="price-validate-button" disabled>
+                            Valider l'achat
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('mainContent').innerHTML = priceContent;
+            price_initializeStore();
+        }
+
+        function price_initializeStore() {
+            price_displayProducts();
+            price_updateRequiredItemsList();
+            price_updateBudgetDisplay();
+        }
+
+        function price_updateBudgetDisplay() {
+            document.getElementById('price-budget-amount').textContent = price_currentBudget.toFixed(2);
+        }
+
+        function price_canAfford(price) {
+            return price <= price_currentBudget;
+        }
+
+        function price_displayProducts() {
+            const container = document.getElementById('price-items-container');
+            container.innerHTML = products.map(product => {
+                const affordable = price_canAfford(product.price);
+                return `
+                    <div class="item-card price-item-card ${affordable ? '' : 'unaffordable'}">
+                        <h3>${product.name}</h3>
+                        <p>Prix: <span class="price-tag">${product.price.toFixed(2)} €</span></p>
+                        <button class="price-choice-button choice-button" 
+                                onclick="price_addToCart('${product.id}')"
+                                ${affordable ? '' : 'disabled'}>
+                            Ajouter au panier
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function price_updateRequiredItemsList() {
+            const list = document.getElementById('price-required-items-list');
+            list.innerHTML = products.map(product => `
+                <li>
+                    ${product.name} - ${product.price.toFixed(2)}€
+                    ${price_purchasedItems.has(product.id) ? ' ✓' : ''}
+                </li>
+            `).join('');
+
+            const progress = (price_purchasedItems.size / products.length) * 100;
+            document.getElementById('price-progress-fill').style.width = `${progress}%`;
+        }
+
+        function price_addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            
+            if (!price_canAfford(product.price)) {
+                price_showError("Budget insuffisant pour cet article!");
+                return;
+            }
+
+            price_cart.push({
+                productId: product.id,
+                price: product.price
+            });
+            
+            price_currentBudget -= product.price;
+            price_purchasedItems.add(product.id);
+            
+            price_updateCart();
+            price_updateBudgetDisplay();
+            price_updateRequiredItemsList();
+            price_displayProducts();
+        }
+
+        function price_updateCart() {
+            const total = price_cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('price-total-price').textContent = total.toFixed(2);
+            document.getElementById('price-validate-button').disabled = price_cart.length === 0;
+        }
+
+        async function price_validatePurchase() {
+            try {
+                let isValid = true;
+                for (let item of price_cart) {
+                    const validPrice = await API.validatePrice(item);
+                    if (!validPrice) {
+                        isValid = false;
+                        break;
+                    }
+                }
+
+                if (!isValid) {
+                    price_showError("Erreur: Prix invalides détectés.");
+                    return;
+                }
+
+                const allItemsPurchased = products.every(product => 
+                    price_purchasedItems.has(product.id)
+                );
+
+                if (allItemsPurchased) {
+                    price_showSuccess("Félicitations ! Vous avez réussi à obtenir tous les composants nécessaires !");
+                } else {
+                    price_showError("Il manque encore des composants requis.");
+                }
+            } catch (error) {
+                price_showError("Une erreur est survenue lors de la validation.");
+            }
+        }
+
+        function price_showSuccess(message) {
+            const div = document.createElement('div');
+            div.className = 'success';
+            div.textContent = message;
+            const summary = document.getElementById('price-cart-summary');
+            summary.appendChild(div);
+            if (summary.children.length > 3) {
+                summary.removeChild(summary.lastChild);
+            }
+        }
+
+        function price_showError(message) {
+            const div = document.createElement('div');
+            div.className = 'error';
+            div.textContent = message;
+            const summary = document.getElementById('price-cart-summary');
+            summary.appendChild(div);
+            if (summary.children.length > 3) {
+                summary.removeChild(summary.lastChild);
+            }
+        }
+
+        /* -------------------- Fin de l'intégration du Jeu de Manipulation des Prix -------------------- */
+
+    </script>
+</body>
+</html>
+
+

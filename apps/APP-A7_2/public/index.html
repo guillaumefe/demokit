@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Forger un token JWT mal sécurisé</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { text-align: center; }
+    h2 { margin-top: 40px; }
+    #client-name { font-weight: bold; }
+    #result { margin-top: 20px; font-weight: bold; }
+    #info { margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f9f9f9; }
+    .exp-section pre { background-color: #f0f0f0; padding: 10px; }
+    button.toggle { margin-top: 20px; }
+    .exp-section { display: none; }
+    .highlight { background-color: #ffffcc; }
+    form { max-width: 800px; margin: 0 auto; }
+    input[type="text"] { width: 100%; padding: 8px; }
+    button { padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <h1>Forger un token JWT mal sécurisé</h1>
+  <h2>Objectif de l'attaque</h2>
+  <p>Exploitez une faille dans la validation JWT pour accéder aux ressources protégées.</p>
+
+  <form id="jwt-form">
+    <label for="token">Entrer un JWT :</label><br>
+    <input type="text" id="token" name="token" size="80" placeholder="eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4xIiwicm9sZSI6ImFkbWluIn0."><br><br>
+    <button type="submit">Soumettre</button>
+  </form>
+
+  <div id="result"></div>
+
+  <button id="toggleInfo" class="toggle">Afficher les explications</button>
+
+  <div id="info" class="exp-section">
+    <h2>À propos de ce site</h2>
+    <p>Ce site est conçu pour illustrer une vulnérabilité spécifique liée aux <strong>JSON Web Tokens (JWT)</strong>. Les JWT sont largement utilisés pour l'authentification et la gestion des sessions dans les applications web modernes. Cependant, une mauvaise implémentation peut conduire à des failles de sécurité critiques.</p>
+
+    <h3>Comment le site fonctionne</h3>
+    <p>L'application permet aux utilisateurs de soumettre un token JWT qui est ensuite validé côté serveur pour déterminer s'ils ont accès à des ressources protégées. Normalement, le serveur devrait vérifier la <strong>signature</strong> du token en utilisant une clé secrète connue uniquement de lui. Cependant, dans cette simulation, le serveur ne valide pas correctement certains aspects du token, ce qui ouvre la porte à des manipulations malveillantes.</p>
+
+    <h3>Pourquoi il y a une vulnérabilité</h3>
+    <p>La vulnérabilité réside dans le fait que le serveur accepte des tokens JWT signés avec l'algorithme <span class="highlight">'none'</span>. Dans la spécification JWT, l'algorithme 'none' indique qu'il n'y a pas de signature. Si le serveur ne rejette pas explicitement les tokens utilisant cet algorithme, un attaquant peut créer un token arbitraire sans signature, et le serveur l'acceptera comme valide.</p>
+
+    <h3>Étape par étape pour exploiter la vulnérabilité</h3>
+
+    <h4>Étape 1 : Comprendre la structure d'un JWT</h4>
+    <p>Un JWT est composé de trois parties séparées par des points :</p>
+    <ul>
+      <li><strong>En-tête (Header)</strong> : Spécifie le type de token et l'algorithme de signature utilisé.</li>
+      <li><strong>Charge utile (Payload)</strong> : Contient les revendications (informations) sur l'utilisateur.</li>
+      <li><strong>Signature</strong> : Assure l'intégrité du token.</li>
+    </ul>
+
+    <h4>Étape 2 : Créer un JWT avec l'algorithme 'none'</h4>
+    <p>Nous allons forger un JWT en spécifiant l'algorithme 'none', ce qui signifie qu'il n'y aura pas de signature.</p>
+    <p><strong>En-tête (Header) :</strong></p>
+    <pre>{
+  "alg": "none",
+  "typ": "JWT"
+}</pre>
+    <p><strong>Charge utile (Payload) :</strong></p>
+    <pre>{
+  "user": "admin1",
+  "role": "admin"
+}</pre>
+    <p>Ensuite, encodez ces deux parties en Base64URL.</p>
+    <ul>
+      <li>En-tête encodé :</li>
+      <pre>eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0</pre>
+      <li>Charge utile encodée :</li>
+      <pre>eyJ1c2VyIjoiYWRtaW4xIiwicm9sZSI6ImFkbWluIn0</pre>
+    </ul>
+    <p>Comme l'algorithme est 'none', il n'y a pas de signature. Assemblez donc le token :</p>
+    <pre class="highlight">eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4xIiwicm9sZSI6ImFkbWluIn0.</pre>
+
+    <h4>Étape 3 : Soumettre le token</h4>
+    <p>Copiez le token ci-dessus et collez-le dans le champ <em>'Entrer un JWT'</em> du formulaire ci-dessus, puis cliquez sur <strong>'Soumettre'</strong>.</p>
+
+    <h4>Étape 4 : Observer le résultat</h4>
+    <p>Si le serveur est vulnérable, il acceptera le token sans signature et vous accordera un accès non autorisé aux ressources protégées. Vous devriez voir le message :</p>
+    <pre class="highlight">Accès autorisé en tant qu'admin. Permissions: read, write, delete, manage_users</pre>
+
+    <h4>Étape 5 : Expérimenter avec d'autres rôles</h4>
+    <p>Vous pouvez modifier la charge utile pour tester différents scénarios.</p>
+    <p><strong>Exemple pour un utilisateur standard :</strong></p>
+    <pre>{
+  "user": "user1",
+  "role": "user"
+}</pre>
+    <p>Token complet pour utilisateur standard :</p>
+    <pre class="highlight">eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoidXNlcjEiLCJyb2xlIjoidXNlciJ9.</pre>
+
+    <p><strong>Exemple pour un invité :</strong></p>
+    <pre>{
+  "user": "guest1",
+  "role": "guest"
+}</pre>
+    <p>Token complet pour invité :</p>
+    <pre class="highlight">eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiZ3Vlc3QxIiwicm9sZSI6Imd1ZXN0In0.</pre>
+
+    <h3>Où se trouve 'none' dans le token ?</h3>
+    <p>Le mot <span class="highlight">'none'</span> est spécifié dans l'<strong>en-tête</strong> du token JWT. Il est encodé en Base64URL dans la première partie du token. En décodant l'en-tête, vous obtenez :</p>
+    <pre>{
+  "alg": "none",
+  "typ": "JWT"
+}</pre>
+    <p>C'est cette spécification de l'algorithme 'none' qui permet de contourner la vérification de la signature.</p>
+
+    <h3>Comment remédier à la vulnérabilité</h3>
+    <p>Pour corriger cette vulnérabilité, les développeurs doivent :</p>
+    <ul>
+      <li><strong>Rejeter explicitement</strong> les tokens utilisant l'algorithme 'none'.</li>
+      <li><strong>Spécifier</strong> les algorithmes de signature acceptables lors de la configuration des bibliothèques JWT.</li>
+      <li><strong>Vérifier</strong> la présence et la validité de la signature du token en utilisant la clé secrète appropriée.</li>
+    </ul>
+
+    <h3>Ressources supplémentaires</h3>
+    <ul>
+      <li><a href="https://jwt.io/introduction/" target="_blank">Introduction aux JSON Web Tokens</a></li>
+      <li><a href="https://owasp.org/www-project-top-ten/" target="_blank">Projet OWASP Top Ten</a></li>
+      <li><a href="https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/" target="_blank">Vulnérabilités critiques dans les bibliothèques JWT</a></li>
+    </ul>
+
+    <h3>Glossaire</h3>
+    <ul>
+      <li><strong>JSON Web Token (JWT)</strong> : Un standard pour créer des tokens d'accès sécurisés.</li>
+      <li><strong>Base64URL</strong> : Une variante de l'encodage Base64 utilisée pour les URL.</li>
+      <li><strong>Algorithme 'none'</strong> : Spécifie qu'aucun algorithme de signature n'est utilisé.</li>
+      <li><strong>Signature</strong> : Assure l'intégrité et l'authenticité du token.</li>
+      <li><strong>Attaquant</strong> : Personne cherchant à exploiter des vulnérabilités pour accéder à des ressources non autorisées.</li>
+      <li><strong>Vulnérabilité</strong> : Faiblesse dans un système pouvant être exploitée pour compromettre sa sécurité.</li>
+    </ul>
+  </div>
+
+  <script>
+    function base64UrlDecode(str) {
+      str = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (str.length % 4) {
+        str += '=';
+      }
+      try {
+        return decodeURIComponent(escape(atob(str)));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    const ROLES = {
+      ADMIN: 'admin',
+      USER: 'user',
+      GUEST: 'guest'
+    };
+
+    const ROLE_PERMISSIONS = {
+      admin: ['read', 'write', 'delete', 'manage_users'],
+      user: ['read', 'write'],
+      guest: ['read']
+    };
+
+    function checkUserAuthorization(userRole) {
+      if (!ROLES[userRole.toUpperCase()]) {
+        return false;
+      }
+      return true;
+    }
+
+    function validateJWT(token) {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return { success: false, message: 'Token mal formé.' };
+      }
+
+      const header = base64UrlDecode(parts[0]);
+      const payload = base64UrlDecode(parts[1]);
+      const signature = parts[2];
+
+      if (!header || !payload) {
+        return { success: false, message: 'Erreur de décodage du token.' };
+      }
+
+      let headerObj, payloadObj;
+      try {
+        headerObj = JSON.parse(header);
+        payloadObj = JSON.parse(payload);
+      } catch (e) {
+        return { success: false, message: 'Erreur de parsing JSON.' };
+      }
+
+      if (headerObj.alg === 'none') {
+        if (!payloadObj.user || !payloadObj.role) {
+          return { 
+            success: false, 
+            message: 'Token invalide : informations utilisateur manquantes.' 
+          };
+        }
+
+        if (!checkUserAuthorization(payloadObj.role)) {
+          return { 
+            success: false, 
+            message: 'Accès refusé : rôle non reconnu.' 
+          };
+        }
+
+        const permissions = ROLE_PERMISSIONS[payloadObj.role.toLowerCase()];
+        return { 
+          success: true, 
+          message: `Accès autorisé en tant que ${payloadObj.role}. Permissions: ${permissions.join(', ')}` 
+        };
+      } else {
+        return { 
+          success: false, 
+          message: 'Accès refusé : algorithme de signature invalide.' 
+        };
+      }
+    }
+
+    document.getElementById('toggleInfo').addEventListener('click', function() {
+      const info = document.getElementById('info');
+      info.style.display = info.style.display === 'none' || info.style.display === '' ? 'block' : 'none';
+    });
+
+    document.getElementById('jwt-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const token = document.getElementById('token').value.trim();
+
+      if (!token) {
+        document.getElementById('result').innerHTML = '<span style="color: red;">Veuillez entrer un token JWT.</span>';
+        return;
+      }
+
+      const validation = validateJWT(token);
+      const resultDiv = document.getElementById('result');
+      
+      if (validation.success) {
+        resultDiv.innerHTML = '<span style="color: green;">' + validation.message + '</span>';
+      } else {
+        resultDiv.innerHTML = '<span style="color: red;">' + validation.message + '</span>';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('info').style.display = 'none';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métier RSSI, focus sur les Défaillances Cryptographiques</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            overflow: auto;
+        }
+        .message-box {
+            width: 100%;
+            max-width: 600px;
+            background-color: #333;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .message {
+            margin: 10px 0;
+        }
+        .message.user {
+            text-align: right;
+            color: lightblue;
+        }
+        .message.system {
+            text-align: left;
+            color: lightgray;
+        }
+        .choices {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .choices button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            width: 80%;
+        }
+        .choices button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .lesson {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            text-align: left;
+        }
+        .lesson h2 {
+            color: #ffcc00;
+        }
+        .lesson p {
+            margin: 10px 0;
+            color: lightgray;
+        }
+        .lesson ul {
+            margin: 10px 0;
+            padding-left: 20px;
+            list-style-type: square;
+            color: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <div class="message-box" id="messages"></div>
+    <div class="choices" id="choices"></div>
+    <div class="status" id="status">Niveau de risque : 0%</div>
+    <div id="lesson" class="lesson" style="display: none;"></div>
+
+    <script>
+        const messagesContainer = document.getElementById("messages");
+        const choicesContainer = document.getElementById("choices");
+        const statusContainer = document.getElementById("status");
+        const lessonContainer = document.getElementById("lesson");
+
+        const story = [
+            {
+                message: "Camille : J'ai trouvé un serveur qui stocke des données sensibles en texte brut. Que dois-je faire ?",
+                choices: [
+                    { text: "Chiffrer immédiatement les données", risk: 0, score: 10 },
+                    { text: "Laisser les données en texte brut", risk: 30, score: -10 }
+                ]
+            },
+            {
+                message: "Taylor : L'algorithme de chiffrement est obsolète. Devrions-nous le remplacer ?",
+                choices: [
+                    { text: "Oui, utiliser AES", risk: 5, score: 10 },
+                    { text: "Non, continuer avec MD5", risk: 40, score: -15 }
+                ]
+            },
+            {
+                message: "Jordan : Je vois des données transmises sans SSL/TLS. Que faisons-nous ?",
+                choices: [
+                    { text: "Activer SSL/TLS", risk: 0, score: 10 },
+                    { text: "Ignorer l'absence de SSL/TLS", risk: 30, score: -10 }
+                ]
+            },
+            {
+                message: "Riley : Une clé cryptographique faible est utilisée pour signer des fichiers sensibles.",
+                choices: [
+                    { text: "Générer une clé plus forte", risk: 5, score: 10 },
+                    { text: "Continuer avec la clé faible", risk: 25, score: -10 }
+                ]
+            },
+            {
+                message: "Camille : Devons-nous mettre en œuvre de bonnes pratiques de gestion des clés ?",
+                choices: [
+                    { text: "Oui, activer la rotation des clés", risk: 0, score: 10 },
+                    { text: "Non, laisser la gestion telle quelle", risk: 35, score: -15 }
+                ]
+            },
+            {
+                message: "Taylor : L'intégrité des données n'est pas vérifiée. Devons-nous y remédier ?",
+                choices: [
+                    { text: "Oui, ajouter des vérifications d'intégrité", risk: 5, score: 10 },
+                    { text: "Non, ignorer ce problème", risk: 25, score: -10 }
+                ]
+            },
+            {
+                message: "Jordan : Il y a une vulnérabilité dans le protocole cryptographique utilisé.",
+                choices: [
+                    { text: "Corriger le protocole", risk: 5, score: 10 },
+                    { text: "Ignorer la vulnérabilité", risk: 40, score: -15 }
+                ]
+            },
+            {
+                message: "Riley : Des données sensibles sont transmises sans anonymisation.",
+                choices: [
+                    { text: "Anonymiser les données", risk: 0, score: 10 },
+                    { text: "Transmettre les données telles quelles", risk: 30, score: -10 }
+                ]
+            },
+            {
+                message: "Camille : Un attaquant a intercepté des données faiblement chiffrées.",
+                choices: [
+                    { text: "Révoquer et re-chiffrer immédiatement", risk: 5, score: 10 },
+                    { text: "Ne rien faire", risk: 50, score: -20 }
+                ]
+            },
+            {
+                message: "Taylor : Devons-nous effectuer un examen final pour garantir la conformité au RGPD ?",
+                choices: [
+                    { text: "Oui, faire l'examen", risk: 0, score: 10 },
+                    { text: "Non, ignorer l'examen", risk: 35, score: -15 }
+                ]
+            }
+        ];
+
+        const dialogue = [
+            {
+                message: "Camille (Responsable IT) : Une correction complète retarderait les livraisons critiques. Que suggérez-vous ?",
+                choices: [
+                    { text: "Corriger immédiatement, quel que soit le coût", outcome: "mitigation" },
+                    { text: "Analyser l'impact et proposer une acceptation temporaire", outcome: "acceptance" }
+                ]
+            },
+            {
+                message: "Jordan (DSI) : Si nous acceptons le risque, quelles seraient les conditions ?",
+                choices: [
+                    { text: "Mettre en place une surveillance renforcée et limiter l'accès", outcome: "monitored_acceptance" },
+                    { text: "Reporter la correction sans mesures de mitigation", outcome: "unmitigated_risk" }
+                ]
+            },
+            {
+                message: "Riley (CISO) : Préparons-nous un rapport sur le risque accepté ou proposons-nous un plan d'action immédiat ?",
+                choices: [
+                    { text: "Préparer un rapport sur le risque accepté", outcome: "accepted_risk" },
+                    { text: "Élaborer un plan de correction immédiate", outcome: "immediate_plan" }
+                ]
+            }
+        ];
+
+        let currentStep = 0;
+        let score = 0;
+        let riskLevel = 0;
+        let currentDialogueStep = 0;
+
+        function displayMessage(content, type = "system") {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerText = content;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function displayChoices(choices) {
+            choicesContainer.innerHTML = "";
+            choices.forEach(choice => {
+                const button = document.createElement("button");
+                button.innerText = choice.text;
+                button.addEventListener("click", () => handleChoice(choice));
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        function handleChoice(choice) {
+            riskLevel += choice.risk || 0;
+            score += choice.score || 0;
+
+            if (riskLevel >= 100) {
+                endGame();
+                return;
+            }
+
+            if (currentStep < story.length) {
+                currentStep++;
+                displayStory();
+            } else if (currentDialogueStep < dialogue.length) {
+                currentDialogueStep++;
+                displayDialogue();
+            } else {
+                endGameDialogue();
+            }
+        }
+
+        function displayStory() {
+            if (currentStep < story.length) {
+                const step = story[currentStep];
+                displayMessage(step.message);
+                displayChoices(step.choices);
+                statusContainer.innerText = `Niveau de risque : ${riskLevel}%`;
+            } else {
+                displayDialogue();
+            }
+        }
+
+        function displayDialogue() {
+            if (currentDialogueStep < dialogue.length) {
+                const step = dialogue[currentDialogueStep];
+                displayMessage(step.message);
+                displayChoices(step.choices);
+            } else {
+                endGameDialogue();
+            }
+        }
+
+        function endGame() {
+            displayMessage("La police vous a arrêté en raison de violations cryptographiques liée à votre statut réglementaire.", "user");
+            choicesContainer.innerHTML = "";
+            statusContainer.innerText = "Vous avez été arrêté.";
+            showLesson();
+        }
+
+        function endGameDialogue() {
+            displayMessage("Dialogue terminé : Une décision stratégique a été prise.", "user");
+            choicesContainer.innerHTML = "";
+            statusContainer.innerText = "Mission terminée.";
+        }
+
+        function showLesson() {
+            lessonContainer.style.display = "block";
+            lessonContainer.innerHTML = `
+                <h2>Bonnes pratiques en cryptographie</h2>
+                <p>Respectez les normes RGPD, NIS2, DORA, et les directives de l'ANSSI pour éviter les failles.</p>
+                <ul>
+                    <li>Utilisez AES et RSA pour des clés fortes.</li>
+                    <li>Sécurisez les communications avec TLS.</li>
+                    <li>Implémentez des rotations de clés et des HSM.</li>
+                </ul>
+            `;
+        }
+
+        displayStory();
+    </script>
+</body>
+</html>
+

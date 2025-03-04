@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Demo Kit</title>
+    <link id="favicon" rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .category-container {
+            margin-bottom: 30px;
+        }
+        .category-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .app-container {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            position: relative;
+            border-radius: 5px;
+        }
+        .app-container.done {
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+        .done-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4caf50;
+            color: #fff;
+            padding: 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .app-container a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .app-container a:hover {
+            background-color: #218838;
+        }
+        .app-container button {
+            margin-top: 10px;
+            background-color: #007bff;
+            padding: 4px 10px;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .app-container button.done {
+            background-color: #4caf50;
+        }
+        .app-container button:not(.done):hover {
+            background-color: #0056b3;
+        }
+        .app-container button.done:hover {
+            background-color: #388e3c;
+        }
+    </style>
+    <script>
+        const pageTitle = "Demo Kit";
+        const sectionTitle = "TOP10 OWASP Application Challenges";
+
+        const vulnerabilities = [{"id": "app-a0", "category": "Applications", "title": "A00:OWASP Top 10 (diff)", "description": "KIT OWASP", "port": "3002", "url": "http://localhost:3002"}, {"id": "app-a1", "category": "Applications", "title": "A01:2021-Broken Access Control", "description": "KIT OWASP", "port": "3007", "url": "http://localhost:3007"}, {"id": "app-a2", "category": "Applications", "title": "A02:2021-Cryptographic Failures", "description": "KIT OWASP", "port": "3016", "url": "http://localhost:3016"}, {"id": "app-a3", "category": "Applications", "title": "A03:2021 - Injections", "description": "KIT OWASP", "port": "3011", "url": "http://localhost:3011"}, {"id": "app-a4", "category": "Applications", "title": "A04:2021-Insecure Design", "description": "KIT OWASP", "port": "3012", "url": "http://localhost:3012"}, {"id": "app-a5", "category": "Applications", "title": "A05:2021-Security Misconfiguration", "description": "KIT OWASP", "port": "3015", "url": "http://localhost:3015"}, {"id": "app-a6", "category": "Applications", "title": "A06:2021-Vulnerable and Outdated Components", "description": "KIT OWASP", "port": "3008", "url": "http://localhost:3008"}, {"id": "app-a7_2", "category": "Applications", "title": "A07:2021 - A07:2021-Identification and Authentication Failures (focus JWT)", "description": "KIT OWASP", "port": "3010", "url": "http://localhost:3010"}, {"id": "app-a7", "category": "Applications", "title": "A07:2021-Identification and Authentication Failures", "description": "KIT OWASP", "port": "3001", "url": "http://localhost:3001"}, {"id": "app-a8", "category": "Applications", "title": "A08:2021-Software and Data Integrity Failures", "description": "KIT OWASP", "port": "3006", "url": "http://localhost:3006"}, {"id": "app-a9", "category": "Applications", "title": "A09:2021-Security Logging and Monitoring Failures", "description": "KIT OWASP", "port": "3003", "url": "http://localhost:3003"}, {"id": "app-a10", "category": "Applications", "title": "A10:2021-Server-Side Request Forgery", "description": "KIT OWASP", "port": "3020", "url": "http://localhost:3020"}, {"id": "app-bonus0", "category": "Applications", "title": "Bonus : Black Hat Game", "description": "Jeu narratif inspir\u00e9 par Dope Wars", "port": "3018", "url": "http://localhost:3018"}, {"id": "app-bonus3", "category": "Applications", "title": "Bonus : CVE Game", "description": "Jeu narratif sur la s\u00e9curit\u00e9 des applications web", "port": "3004", "url": "http://localhost:3004"}, {"id": "app-bonus6", "category": "Applications", "title": "Bonus : EFREI electronic-shop-game", "description": "Jeu narratif sur la s\u00e9curit\u00e9 des applications web", "port": "3014", "url": "http://localhost:3014"}, {"id": "app-bonus7", "category": "Applications", "title": "Bonus : EGE narrative-involvement", "description": "Jeu narratif sur la s\u00e9curit\u00e9 des applications web", "port": "3017", "url": "http://localhost:3017"}, {"id": "app-bonus5", "category": "Applications", "title": "Bonus : Hacker Flee Game", "description": "Jeu narratif sur la cybers\u00e9curit\u00e9", "port": "3021", "url": "http://localhost:3021"}, {"id": "app-bonus4", "category": "Applications", "title": "Bonus : Lukcpickr Game", "description": "Jeu narratif sur la s\u00e9curit\u00e9 des verrous", "port": "3005", "url": "http://localhost:3005"}, {"id": "app-bonus2", "category": "Applications", "title": "Bonus : Race Condition illustration", "description": "Jeu narratif sur la s\u00e9curit\u00e9 des applications web", "port": "3000", "url": "http://localhost:3000"}, {"id": "app-bonus1", "category": "Applications", "title": "Bonus : Reverse shell illustration", "description": "Jeu narratif sur la s\u00e9curit\u00e9 des applications web", "port": "3013", "url": "http://localhost:3013"}, {"id": "app-metier2", "category": "Applications", "title": "M\u00e9tier - Consultant ou Chef de projet s\u00e9curit\u00e9", "description": "Jeu narratif sur les m\u00e9tiers de la cybers\u00e9curit\u00e9", "port": "3019", "url": "http://localhost:3019"}, {"id": "app-metier1", "category": "Applications", "title": "M\u00e9tier - RSSI ou Assistant RSSI", "description": "Jeu narratif sur les m\u00e9tiers de la cybers\u00e9curit\u00e9", "port": "3009", "url": "http://localhost:3009"}];
+
+        window.onload = function() {
+            document.getElementById('page-title').textContent = pageTitle;
+            document.querySelector('h1').textContent = sectionTitle;
+
+            const container = document.getElementById('app-list');
+
+            // Regrouper les applications par catégorie
+            const categories = {};
+            vulnerabilities.forEach(app => {
+                if (!categories[app.category]) {
+                    categories[app.category] = [];
+                }
+                categories[app.category].push(app);
+            });
+
+            // Afficher les applications par catégorie
+            Object.keys(categories).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-container';
+
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = category;
+
+                categoryDiv.appendChild(categoryTitle);
+
+                categories[category].forEach(app => {
+                    const appDiv = document.createElement('div');
+                    appDiv.className = 'app-container';
+                    appDiv.id = `app-${app.id}`;
+
+                    appDiv.innerHTML = `
+                        <h2>${app.title}</h2>
+                        <p>${app.description}</p>
+                        <a href="http://${window.location.hostname}:${app.port}" id="demo-link-${app.id}">Demo</a>
+                        <button onclick="toggleDone('${app.id}')">Mark</button>
+                    `;
+
+                    categoryDiv.appendChild(appDiv);
+                });
+
+                container.appendChild(categoryDiv);
+            });
+        };
+
+        function toggleDone(appId) {
+            const appContainer = document.getElementById(`app-${appId}`);
+            const button = appContainer.querySelector('button');
+            const link = appContainer.querySelector(`#demo-link-${appId}`);
+            const isDone = appContainer.classList.contains('done');
+
+            if (isDone) {
+                button.textContent = "Mark";
+                button.classList.remove('done');
+                appContainer.classList.remove('done');
+                const doneLabel = appContainer.querySelector('.done-label');
+                if (doneLabel) doneLabel.remove();
+                link.style.display = 'inline-block';
+            } else {
+                button.textContent = "Done";
+                button.classList.add('done');
+                appContainer.classList.add('done');
+                const doneLabel = document.createElement('div');
+                doneLabel.className = 'done-label';
+                doneLabel.textContent = 'Completed';
+                appContainer.appendChild(doneLabel);
+                link.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1></h1>
+    <div id="app-list"></div>
+</body>
+</html>

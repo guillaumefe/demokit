@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formation OWASP A09 - Logging et Monitoring</title>
+    <style>
+:root {
+    --primary: #2196F3;
+    --secondary: #607D8B;
+    --success: #4CAF50;
+    --warning: #FFC107;
+    --danger: #f44336;
+    --info: #03A9F4;
+    --bg-dark: #1e1e1e;
+    --text-light: #e0e0e0;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: -apple-system, system-ui, sans-serif;
+    line-height: 1.6;
+    background: #f5f5f5;
+    color: #333;
+}
+.navbar {
+    background: #fff;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+.progress-bar {
+    display: flex;
+    margin: 1rem 0;
+    gap: 4px;
+}
+.progress-step {
+    flex: 1;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+}
+.progress-step.active {
+    background: var(--primary);
+}
+.progress-step.completed {
+    background: var(--success);
+}
+.lesson-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.description {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 15px 0;
+}
+.code-editor {
+    margin: 15px 0;
+}
+.code-toolbar {
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    gap: 10px;
+}
+.code-input {
+    width: 100%;
+    min-height: 300px;
+    padding: 15px;
+    font-family: monospace;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    border: none;
+    border-radius: 0 0 4px 4px;
+    resize: vertical;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    background: var(--primary);
+    color: white;
+}
+.button:hover {
+    opacity: 0.9;
+}
+.button.secondary {
+    background: var(--secondary);
+}
+.button.success {
+    background: var(--success);
+}
+.log-viewer {
+    background: var(--bg-dark);
+    color: var(--text-light);
+    padding: 15px;
+    border-radius: 4px;
+    height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+}
+.log-entry {
+    padding: 5px;
+    margin: 2px 0;
+    border-left: 3px solid transparent;
+}
+.log-entry.info { border-color: var(--info); }
+.log-entry.warning { border-color: var(--warning); }
+.log-entry.error { border-color: var(--danger); }
+.feedback {
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 4px;
+}
+.feedback.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+.feedback.error {
+    background: #ffebee;
+    color: #c62828;
+}
+.score {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Formation OWASP A09: Logging et Monitoring</h1>
+    </div>
+    <div class="container">
+        <div class="score">Score: <span id="score">0</span>/100</div>
+        <div id="progress-bar" class="progress-bar"></div>
+        <div id="main-content"></div>
+    </div>
+<script>
+const lessons = [
+    {
+        id: 'login-monitoring',
+        title: 'Leçon 1: Monitoring des Connexions',
+        description: `Les systèmes d'authentification sans journalisation appropriée sont vulnérables aux attaques par force brute et autres tentatives malveillantes.
+
+Objectifs:
+✓ Logger chaque tentative
+✓ Enregistrer l'IP et le User-Agent
+✓ Implémenter un rate limiting
+✓ Gérer les erreurs de manière sécurisée`,
+        initialCode: 
+`app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (authenticate(username, password)) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false });
+    }
+});`,
+        solutionTemplate:
+`app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+    const ip = req.ip;
+    
+    logger.info({
+        event: 'login_attempt',
+        username,
+        ip,
+        timestamp: new Date().toISOString(),
+        userAgent: req.headers['user-agent']
+    });
+
+    if (await isRateLimited(ip)) {
+        logger.warn({
+            event: 'login_blocked',
+            username,
+            ip,
+            reason: 'rate_limit_exceeded'
+        });
+        return res.status(429).json({ 
+            error: 'Too many attempts' 
+        });
+    }
+
+    try {
+        if (await authenticate(username, password)) {
+            logger.info({
+                event: 'login_success',
+                username,
+                ip
+            });
+            res.json({ success: true });
+        } else {
+            logger.warn({
+                event: 'login_failure',
+                username,
+                ip,
+                reason: 'invalid_credentials'
+            });
+            await incrementFailedAttempts(ip);
+            res.status(401).json({ success: false });
+        }
+    } catch (error) {
+        logger.error({
+            event: 'login_error',
+            username,
+            ip,
+            error: error.message
+        });
+        res.status(500).json({ 
+            error: 'Internal server error' 
+        });
+    }
+});`,
+        requirements: [
+            { check: 'login_attempt', points: 20, message: 'Journalisation des tentatives' },
+            { check: 'isRateLimited', points: 20, message: 'Rate limiting' },
+            { check: 'userAgent', points: 20, message: 'User-Agent' },
+            { check: 'try', points: 20, message: 'Gestion erreurs' },
+            { check: 'incrementFailedAttempts', points: 20, message: 'Suivi échecs' }
+        ],
+        sampleLogs: [
+            { level: 'info', message: 'Login attempt from IP: 192.168.1.100' },
+            { level: 'warning', message: 'Failed login for user: admin' },
+            { level: 'error', message: 'Multiple failed attempts detected' }
+        ]
+    },
+    {
+        id: 'api-monitoring',
+        title: 'Leçon 2: Monitoring des API',
+        description: `Les API sans surveillance adéquate peuvent être exploitées sans détection.
+
+Objectifs:
+✓ Mesurer les temps de réponse
+✓ Implémenter des identifiants de requête
+✓ Détecter les requêtes anormales
+✓ Sécuriser les paramètres`,
+        initialCode:
+`app.get('/api/data', (req, res) => {
+    const data = fetchData(req.query);
+    res.json(data);
+});`,
+        solutionTemplate:
+`app.get('/api/data', async (req, res) => {
+    const startTime = process.hrtime();
+    const requestId = generateRequestId();
+
+    logger.info({
+        event: 'api_request_start',
+        requestId,
+        method: req.method,
+        path: req.path,
+        query: sanitizeParams(req.query),
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+    });
+
+    try {
+        if (await isRateLimited(req.ip, req.path)) {
+            logger.warn({
+                event: 'api_rate_limit',
+                requestId,
+                ip: req.ip,
+                path: req.path
+            });
+            return res.status(429).json({
+                error: 'Rate limit exceeded'
+            });
+        }
+
+        const data = await fetchData(req.query);
+        const [seconds, nanoseconds] = process.hrtime(startTime);
+        const duration = seconds * 1000 + nanoseconds / 1000000;
+
+        logger.info({
+            event: 'api_request_complete',
+            requestId,
+            duration,
+            status: 200
+        });
+
+        if (duration > 1000) {
+            logger.warn({
+                event: 'slow_api_request',
+                requestId,
+                duration,
+                path: req.path
+            });
+        }
+
+        res.json(data);
+    } catch (error) {
+        const [seconds, nanoseconds] = process.hrtime(startTime);
+        const duration = seconds * 1000 + nanoseconds / 1000000;
+
+        logger.error({
+            event: 'api_request_error',
+            requestId,
+            error: error.message,
+            stack: error.stack,
+            duration,
+            path: req.path
+        });
+
+        res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+});`,
+        requirements: [
+            { check: 'process.hrtime', points: 20, message: 'Temps de réponse' },
+            { check: 'generateRequestId', points: 20, message: 'ID de requête' },
+            { check: 'sanitizeParams', points: 20, message: 'Sécurisation params' },
+            { check: 'duration > 1000', points: 20, message: 'Détection lenteur' },
+            { check: 'api_request_error', points: 20, message: 'Log erreurs' }
+        ],
+        sampleLogs: [
+            { level: 'info', message: 'API request started: GET /api/data' },
+            { level: 'warning', message: 'Slow API response: 2500ms' },
+            { level: 'error', message: 'API error: Database timeout' }
+        ]
+    },
+    {
+        id: 'data-access',
+        title: 'Leçon 3: Audit des Données Sensibles',
+        description: `L'accès aux données sensibles doit être strictement surveillé et audité.
+
+Objectifs:
+✓ Implémenter un système d'audit
+✓ Vérifier les permissions
+✓ Enregistrer les modifications
+✓ Exiger des justifications`,
+        initialCode:
+`app.get('/api/users/:id/sensitive-data', (req, res) => {
+    const data = fetchSensitiveData(req.params.id);
+    res.json(data);
+});`,
+        solutionTemplate:
+`app.get('/api/users/:id/sensitive-data', async (req, res) => {
+    const accessId = generateAccessId();
+    const requestingUser = req.user;
+    const targetUserId = req.params.id;
+
+    logger.info({
+        event: 'sensitive_data_access_attempt',
+        accessId,
+        requestingUser: requestingUser.id,
+        targetUser: targetUserId,
+        dataType: 'sensitive_data',
+        timestamp: new Date().toISOString(),
+        justification: req.body.justification || 'No justification provided'
+    });
+
+    try {
+        if (!await hasPermission(requestingUser, targetUserId)) {
+            logger.warn({
+                event: 'unauthorized_sensitive_access',
+                accessId,
+                requestingUser: requestingUser.id,
+                targetUser: targetUserId,
+                reason: 'insufficient_permissions'
+            });
+            return res.status(403).json({
+                error: 'Unauthorized access'
+            });
+        }
+
+        const data = await fetchSensitiveData(targetUserId);
+
+        logger.info({
+            event: 'sensitive_data_accessed',
+            accessId,
+            requestingUser: requestingUser.id,
+            targetUser: targetUserId,
+            dataType: 'sensitive_data',
+            accessType: 'read'
+        });
+
+        await recordAccessToAuditLog({
+            accessId,
+            requestingUser,
+            targetUser: targetUserId,
+            timestamp: new Date(),
+            dataType: 'sensitive_data',
+            operation: 'read'
+        });
+
+        res.json(data);
+    } catch (error) {
+        logger.error({
+            event: 'sensitive_data_access_error',
+            accessId,
+            error: error.message,
+            requestingUser: requestingUser.id,
+            targetUser: targetUserId
+        });
+
+        res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+});`,
+        requirements: [
+            { check: 'hasPermission', points: 20, message: 'Vérif permissions' },
+            { check: 'justification', points: 20, message: 'Justification' },
+            { check: 'recordAccessToAuditLog', points: 20, message: 'Audit log' },
+            { check: 'sensitive_data_access', points: 20, message: 'Log accès' },
+            { check: 'unauthorized_sensitive_access', points: 20, message: 'Détection non-autorisé' }
+        ],
+        sampleLogs: [
+            { level: 'info', message: 'Sensitive data access attempt by user: john_doe' },
+            { level: 'warning', message: 'Unauthorized access attempt to sensitive data' },
+            { level: 'error', message: 'Multiple access attempts from unusual location' }
+        ]}
+];
+
+class App {
+    constructor() {
+        this.currentLesson = 0;
+        this.score = 0;
+        this.completedLessons = new Set();
+        this.init();
+    }
+
+    init() {
+        this.updateProgressBar();
+        this.renderCurrentLesson();
+        this.startLogSimulation();
+    }
+
+    updateProgressBar() {
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.innerHTML = lessons.map((_, index) => `
+            <div class="progress-step ${index === this.currentLesson ? 'active' : ''} ${this.completedLessons.has(index) ? 'completed' : ''}"></div>
+        `).join('');
+    }
+
+    renderCurrentLesson() {
+        const lesson = lessons[this.currentLesson];
+        const mainContent = document.getElementById('main-content');
+        
+        mainContent.innerHTML = `
+            <div class="lesson-card">
+                <h2>${lesson.title}</h2>
+                <div class="description">${lesson.description}</div>
+                
+                <div class="code-editor">
+                    <div class="code-toolbar">
+                        <button class="button" onclick="app.resetCode()">Réinitialiser</button>
+                        <button class="button success" onclick="app.useSolution()">Utiliser Solution</button>
+                    </div>
+                    <textarea id="code-input" class="code-input" spellcheck="false">${lesson.initialCode}</textarea>
+                </div>
+
+                <h3>Logs en temps réel:</h3>
+                <div id="log-viewer" class="log-viewer"></div>
+
+                <div id="feedback"></div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    ${this.currentLesson > 0 ? 
+                        `<button class="button secondary" onclick="app.previousLesson()">← Leçon Précédente</button>` : 
+                        '<div></div>'}
+                    <button class="button success" onclick="app.validateSolution()">Valider</button>
+                </div>
+            </div>
+        `;
+    }
+
+    startLogSimulation() {
+        const logViewer = document.getElementById('log-viewer');
+        const lesson = lessons[this.currentLesson];
+        
+        logViewer.innerHTML = '';
+        lesson.sampleLogs.forEach((log, index) => {
+            setTimeout(() => {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${log.level}`;
+                entry.textContent = `[${new Date().toISOString()}] ${log.message}`;
+                logViewer.appendChild(entry);
+                logViewer.scrollTop = logViewer.scrollHeight;
+            }, index * 2000);
+        });
+    }
+
+    resetCode() {
+        document.getElementById('code-input').value = lessons[this.currentLesson].initialCode;
+        document.getElementById('feedback').innerHTML = '';
+    }
+
+    useSolution() {
+        document.getElementById('code-input').value = lessons[this.currentLesson].solutionTemplate;
+    }
+
+    validateSolution(isSolution = false) {
+        const code = document.getElementById('code-input').value;
+        const lesson = lessons[this.currentLesson];
+        let score = 0;
+        const feedback = {
+            fulfilled: [],
+            missing: []
+        };
+
+        lesson.requirements.forEach(req => {
+            if (code.toLowerCase().includes(req.check.toLowerCase())) {
+                score += req.points;
+                feedback.fulfilled.push(req.message);
+            } else {
+                feedback.missing.push(req.message);
+            }
+        });
+
+        const passedLesson = isSolution || score >= 80;
+        
+        this.showFeedback(feedback, score, passedLesson);
+
+        if (passedLesson) {
+            this.completedLessons.add(this.currentLesson);
+            this.updateScore();
+            setTimeout(() => this.nextLesson(), 3000);
+        }
+    }
+
+    showFeedback(feedback, score, passed) {
+        const feedbackDiv = document.getElementById('feedback');
+        feedbackDiv.innerHTML = `
+            <div class="feedback ${passed ? 'success' : 'error'}">
+                <h3>Score: ${score}/100</h3>
+                ${feedback.fulfilled.length > 0 ? `
+                    <div>✅ Validé:</div>
+                    <ul>${feedback.fulfilled.map(msg => `<li>${msg}</li>`).join('')}</ul>
+                ` : ''}
+                ${feedback.missing.length > 0 ? `
+                    <div>❌ Manquant:</div>
+                    <ul>${feedback.missing.map(msg => `<li>${msg}</li>`).join('')}</ul>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    updateScore() {
+        const totalScore = (this.completedLessons.size / lessons.length) * 100;
+        this.score = Math.round(totalScore);
+        document.getElementById('score').textContent = this.score;
+    }
+
+    nextLesson() {
+        if (this.currentLesson < lessons.length - 1) {
+            this.currentLesson++;
+            this.updateProgressBar();
+            this.renderCurrentLesson();
+            this.startLogSimulation();
+        } else {
+            this.showCompletion();
+        }
+    }
+
+    previousLesson() {
+        if (this.currentLesson > 0) {
+            this.currentLesson--;
+            this.updateProgressBar();
+            this.renderCurrentLesson();
+            this.startLogSimulation();
+        }
+    }
+
+    showCompletion() {
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="lesson-card">
+                <h2>🎉 Formation OWASP A09 Terminée!</h2>
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="font-size: 24px; color: var(--success);">
+                        Score Final: ${this.score}%
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <h3>Points clés maîtrisés:</h3>
+                        <ul style="list-style-type: none;">
+                            <li>✓ Journalisation des événements de sécurité</li>
+                            <li>✓ Surveillance des API et des performances</li>
+                            <li>✓ Audit des accès aux données sensibles</li>
+                            <li>✓ Détection des comportements suspects</li>
+                            <li>✓ Implémentation du rate limiting</li>
+                        </ul>
+                    </div>
+                    <button class="button" onclick="app.restart()">
+                        Recommencer la Formation
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    restart() {
+        this.currentLesson = 0;
+        this.score = 0;
+        this.completedLessons = new Set();
+        this.updateProgressBar();
+        this.renderCurrentLesson();
+        this.startLogSimulation();
+        document.getElementById('score').textContent = '0';
+    }
+}
+
+const app = new App();
+</script>
+</body>
+</html>
