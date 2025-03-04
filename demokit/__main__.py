@@ -410,7 +410,11 @@ def main(wait_docker):
         if not docker_manager.check_docker(wait=wait_docker):
             sys.exit(1)
 
-        main_port = PortManager.find_available_port(8000, 8100)
+        if PortManager.is_port_available(80) and not docker_manager.check_port_conflict(80):
+            main_port = 80
+        else:
+            main_port = PortManager.find_available_port(8000, 8100)
+
         catalog_port = PortManager.find_available_port(8101, 8200)
 
         if not main_port or not catalog_port:
