@@ -254,11 +254,11 @@ def main():
     # Vérification de Docker Scout
     try:
         scout_version = subprocess.run(["docker", "scout", "--version"],
-                                       capture_output=True, text=True, check=True)
+                                     capture_output=True, text=True, check=True)
         print(f"{Color.GREEN}Docker Scout activé (version : {scout_version.stdout.strip()}){Color.NC}")
     except subprocess.CalledProcessError:
-        print(f"{Color.RED}Docker Scout n'est pas activé.{Color.NC}")
-        print(f"{Color.YELLOW}Pour activer Docker Scout, exécutez : 'docker scout enable' ou mettez à jour Docker Desktop.{Color.NC}")
+        print(f"{Color.RED}Docker Scout ne fonctionne pas correctement.{Color.NC}")
+        print(f"{Color.YELLOW}Pour activer Docker Scout, assurez-vous d'avoir la dernière version de Docker Desktop ou utilisez 'docker scout repo enable <repository>' selon votre configuration.{Color.NC}")
 
     app_manager = AppManager()
     app_manager.deploy_apps()
