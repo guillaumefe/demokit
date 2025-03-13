@@ -142,7 +142,7 @@ class DockerManager:
 
 class AppManager:
     def __init__(self):
-        self.apps_dir = Path("apps")
+        self.apps_dir = STATIC_FILES_PATH / "apps"
         self.docker_manager = DockerManager()
         self.used_ports = set()
         self.deployed_apps = []
