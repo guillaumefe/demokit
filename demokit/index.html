@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f9;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Guide Professionnel des Vulnérabilités OWASP – Explications Détaillées</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    header, footer {
+      text-align: center;
+      padding: 20px;
+    }
+    header {
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 30px;
+    }
+    h1 {
+      font-size: 2em;
+      color: #003366;
+    }
+    h2 {
+      font-size: 1.6em;
+      color: #00509e;
+      margin-bottom: 10px;
+    }
+    .vulnerability {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    .section-label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .explanation {
+      margin: 5px 0 15px 0;
+      text-align: justify;
+    }
+    footer {
+      font-size: 0.9em;
+      color: #666;
+      border-top: 2px solid #ddd;
+      margin-top: 30px;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Guide Professionnel des Vulnérabilités OWASP</h1>
+    <p>Explications détaillées des principaux risques de sécurité applicative, expliquées depuis les fondamentaux.</p>
+  </header>
+
+  <section>
+    <!-- 1. Broken Access Control -->
+    <div class="vulnerability">
+      <h2>1. Contrôle d'accès défaillant (Broken Access Control)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        Le contrôle d'accès est le processus qui détermine qui a la permission d'accéder à quelles ressources dans un système. Dans un environnement informatique, il s'agit de règles et de mécanismes qui garantissent que seuls les utilisateurs autorisés peuvent consulter, modifier ou exécuter certaines opérations. Cela repose sur l'attribution de rôles, de permissions et de politiques définies lors de la conception de l'application.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Partir de zéro, c'est comprendre que chaque utilisateur est identifié dans le système (souvent via un identifiant unique) et que ce système doit vérifier systématiquement son droit d'accéder à une ressource. Si cette vérification est insuffisante ou mal implémentée, un utilisateur peut dépasser ses privilèges et accéder à des données ou fonctions qui lui sont normalement interdites. Cela peut résulter d'erreurs dans le code, d'une mauvaise configuration ou d'une conception inadéquate des règles d'accès.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une faille dans le contrôle d'accès peut mener à la divulgation d'informations sensibles, à la modification non autorisée de données ou à des actions malveillantes sur le système.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un utilisateur, en manipulant l'URL d'une application, accède à la section réservée aux administrateurs sans avoir les droits correspondants.
+      </p>
+    </div>
+
+    <!-- 2. Cryptographic Failures -->
+    <div class="vulnerability">
+      <h2>2. Failles cryptographiques (Cryptographic Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        La cryptographie est la science qui consiste à transformer des informations afin de les protéger contre toute lecture non autorisée. Les techniques cryptographiques utilisent des algorithmes et des clés pour chiffrer (rendre illisible) et déchiffrer (rendre lisible) des données.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Pour débuter, il est important de comprendre qu'un message ou une donnée peut être converti en une forme codée par le biais d'un algorithme de chiffrement. La sécurité repose sur la complexité de cet algorithme et sur la confidentialité de la clé utilisée. Si la clé est faible, mal protégée ou si l'algorithme présente des vulnérabilités, les attaquants peuvent réussir à inverser le processus et accéder aux informations sensibles.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une faille cryptographique peut entraîner la compromission de données confidentielles, comme des mots de passe ou des informations financières, exposant ainsi l'organisation à des risques majeurs.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un système qui utilise un chiffrement obsolète ou une clé trop courte, permettant à un attaquant de déchiffrer rapidement les données sensibles.
+      </p>
+    </div>
+
+    <!-- 3. Injection -->
+    <div class="vulnerability">
+      <h2>3. Injection</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'injection est une technique d'attaque qui consiste à insérer des commandes ou des requêtes malveillantes dans des champs de saisie. Ces commandes sont ensuite interprétées par le système, ce qui peut altérer son comportement.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        En partant du principe que tout système informatique attend des données dans un format précis, il est essentiel de valider et de filtrer ces entrées. Lorsque des données non vérifiées sont envoyées à un interpréteur (par exemple, une base de données), un attaquant peut exploiter cette vulnérabilité en insérant du code supplémentaire. Ce code peut être exécuté par le système, conduisant à la divulgation d'informations ou à la manipulation de données.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        L'injection peut permettre l'accès non autorisé à la base de données, la modification de données sensibles ou l'exécution de commandes malveillantes sur le serveur.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une requête SQL mal filtrée dans un formulaire de connexion, qui permet à un attaquant d'extraire la totalité de la base de données utilisateur.
+      </p>
+    </div>
+
+    <!-- 4. Insecure Design -->
+    <div class="vulnerability">
+      <h2>4. Conception non sécurisée (Insecure Design)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'insecure design se réfère à l'absence d'une approche intégrée de la sécurité lors de la phase de conception d'une application. Il s'agit de concevoir un système sans intégrer les meilleures pratiques et les principes de sécurité dès le départ.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Commencer par zéro signifie planifier, dès la conception, comment protéger les données et les processus critiques. Cela inclut la définition de politiques de sécurité, la segmentation du réseau, et la mise en place de contrôles d'accès appropriés. Une conception non sécurisée peut provenir d'une négligence des scénarios d'attaque, ce qui rend difficile l'ajout ultérieur de mesures de sécurité robustes sans une refonte complète de l'architecture.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une mauvaise conception peut introduire des vulnérabilités qui, une fois exploitées, compromettent l'ensemble du système, nécessitant souvent des corrections coûteuses et complexes.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une application qui ne prend pas en compte les principes de séparation des privilèges, laissant ainsi des voies d'accès directes aux ressources sensibles sans vérification adéquate.
+      </p>
+    </div>
+
+    <!-- 5. Security Misconfiguration -->
+    <div class="vulnerability">
+      <h2>5. Mauvaise configuration de sécurité (Security Misconfiguration)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        La sécurité d'un système dépend en grande partie de sa configuration. La security misconfiguration survient lorsque des paramètres par défaut ou inappropriés sont laissés en place, exposant ainsi le système à des risques.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Dès la mise en place d'un serveur ou d'une application, il est crucial de revoir et d'ajuster les paramètres de sécurité : désactiver les fonctionnalités inutiles, appliquer les correctifs de sécurité, et configurer correctement les accès réseau. Une mauvaise configuration peut être le résultat d'un manque de suivi, d'une documentation inadéquate ou d'une négligence lors du déploiement.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une configuration inappropriée peut offrir aux attaquants un point d'entrée facile dans le système, facilitant des accès non autorisés ou l'exploitation d'autres vulnérabilités.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un serveur web déployé avec des paramètres par défaut, laissant des interfaces d'administration accessibles depuis l'extérieur.
+      </p>
+    </div>
+
+    <!-- 6. Vulnerable and Outdated Components -->
+    <div class="vulnerability">
+      <h2>6. Composants vulnérables et obsolètes (Vulnerable and Outdated Components)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        Les applications modernes reposent sur de nombreux composants tiers, tels que des bibliothèques ou des frameworks. Leur mise à jour régulière est essentielle pour assurer la sécurité.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Chaque composant logiciel peut comporter des vulnérabilités. Lorsqu'un composant n'est plus maintenu ou que des correctifs ne sont pas appliqués, il devient une cible facile pour les attaquants. L'approche consiste à surveiller les versions utilisées et à appliquer les mises à jour de sécurité dès qu'elles sont disponibles, afin de limiter les risques.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        L'utilisation de composants obsolètes peut permettre à un attaquant d'exploiter des failles connues, compromettant ainsi la sécurité globale de l'application.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une application intégrant un framework de gestion des sessions dont la version présente une vulnérabilité documentée, facilitant l'usurpation d'identité.
+      </p>
+    </div>
+
+    <!-- 7. Identification and Authentication Failures -->
+    <div class="vulnerability">
+      <h2>7. Problèmes d'identification et d'authentification (Identification and Authentication Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'identification consiste à déterminer qui est l'utilisateur, tandis que l'authentification vérifie que l'utilisateur est bien celui qu'il prétend être. Ces mécanismes reposent sur la vérification d'informations (comme un mot de passe, un certificat, ou un jeton) pour garantir l'accès sécurisé aux ressources.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Partir des bases signifie comprendre que chaque utilisateur doit être reconnu par le système. Les méthodes d'authentification varient, allant des mots de passe aux systèmes multifacteurs, et doivent être conçues de manière à minimiser les risques de falsification ou de détournement d'identité. Un système mal conçu dans ce domaine permet à des acteurs malveillants de se faire passer pour un utilisateur légitime.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Des défaillances dans ces mécanismes exposent les systèmes à des attaques d'usurpation d'identité et à l'accès non autorisé à des données sensibles.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un système d'authentification qui ne valide pas correctement les sessions, permettant ainsi à un attaquant de récupérer des informations d'identification et d'accéder au compte d'un utilisateur.
+      </p>
+    </div>
+
+    <!-- 8. Software and Data Integrity Failures -->
+    <div class="vulnerability">
+      <h2>8. Défaillances d'intégrité logicielle et des données (Software and Data Integrity Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        L'intégrité des logiciels et des données assure qu'aucune modification non autorisée n'intervient dans le code ou les informations gérées par un système. C’est un mécanisme essentiel pour garantir que le contenu reste fiable et authentique.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        En partant de zéro, l'intégrité repose sur l'utilisation de signatures numériques, de contrôles de hachage ou d'autres techniques de vérification qui permettent de détecter toute altération. Ces mécanismes permettent de s'assurer que ni le code exécuté ni les données manipulées n'ont été modifiés par des tiers malveillants. Une absence de ces vérifications peut mener à l'exécution de code non vérifié ou à la corruption des données.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Une atteinte à l'intégrité logicielle ou des données peut compromettre la fiabilité du système, entraîner des comportements inattendus ou permettre l'insertion de code malveillant.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Une mise à jour logicielle non signée, où un attaquant a pu modifier le code avant son déploiement, introduisant ainsi une porte dérobée dans l'application.
+      </p>
+    </div>
+
+    <!-- 9. Security Logging and Monitoring Failures -->
+    <div class="vulnerability">
+      <h2>9. Défaillances de la journalisation et de la surveillance (Security Logging and Monitoring Failures)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        La journalisation et la surveillance consistent à enregistrer et analyser les activités d'un système afin de détecter et répondre à d'éventuels incidents de sécurité. Ces mécanismes permettent de constituer une traçabilité des actions.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Du point de départ, il est essentiel de comprendre que chaque action effectuée dans un système peut être consignée dans un journal d'événements. Cela inclut les connexions, les tentatives d'accès et les modifications effectuées. Ces données, une fois analysées, permettent d'identifier des comportements anormaux et de mettre en place des mesures correctives en temps utile. L'absence d'une telle surveillance peut retarder la détection d'une intrusion ou d'une attaque.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        Sans une journalisation et une surveillance adéquates, il est difficile de comprendre l'origine d'un incident, ce qui complique la réponse et l'atténuation des impacts.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un système qui ne consigne pas les tentatives de connexion échouées, laissant ainsi les administrateurs sans information critique pour détecter une attaque par force brute.
+      </p>
+    </div>
+
+    <!-- 10. Server-Side Request Forgery (SSRF) -->
+    <div class="vulnerability">
+      <h2>10. Falsification de requêtes côté serveur (Server-Side Request Forgery - SSRF)</h2>
+      <p class="section-label">Concept de base :</p>
+      <p class="explanation">
+        SSRF est une technique d'attaque où l'attaquant exploite la confiance du serveur pour qu'il réalise des requêtes HTTP vers des ressources internes ou externes. Autrement dit, le serveur est manipulé pour effectuer une action à la place de l'attaquant.
+      </p>
+      <p class="section-label">Explication approfondie :</p>
+      <p class="explanation">
+        Dès le début, un serveur qui reçoit des requêtes est généralement configuré pour communiquer avec d'autres services ou API. Lorsqu'une entrée utilisateur n'est pas correctement validée, un attaquant peut modifier cette requête afin que le serveur contacte une ressource non prévue – par exemple, un service interne normalement protégé. Cela peut être réalisé en modifiant l'URL ou d'autres paramètres de la requête. Le risque réside dans le fait que le serveur, de confiance, peut accéder à des informations sensibles ou exécuter des actions non autorisées en son nom.
+      </p>
+      <p class="section-label">Impact potentiel :</p>
+      <p class="explanation">
+        La falsification de requêtes côté serveur peut exposer des ressources internes sensibles, permettre l'exfiltration de données ou même servir de point d'appui pour d'autres attaques.
+      </p>
+      <p class="section-label">Exemple :</p>
+      <p class="explanation">
+        Un service de téléchargement d'images qui accepte une URL fournie par l'utilisateur sans validation adéquate, et qui, par conséquent, force le serveur à accéder à un système interne non exposé au public.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 – Guide Professionnel des Vulnérabilités OWASP. Pour toute information complémentaire, veuillez consulter les ressources officielles d'OWASP.</p>
+  </footer>
+</body>
+</html>
+
+
+<button onclick="location.href='http://' + window.location.hostname + '/catalog.html'">Parcourir les apps</button>
+</body>
+</html>
